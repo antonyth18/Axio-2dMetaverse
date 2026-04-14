@@ -1,0 +1,19 @@
+{
+  "name": "metaverse-platform",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Monorepo for a real-time 2D metaverse platform",
+  "workspaces": [
+    "frontend/*",
+    "backend/*",
+    "shared/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev -w frontend/react-client\" \"npm run dev -w backend/express-gateway\" \"npm run dev -w backend/go-realtime-engine\"",
+    "install:all": "npm install && npm install --workspaces",
+    "build": "npm run build --workspaces"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
