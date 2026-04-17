@@ -6,6 +6,7 @@ import { HomePage } from './pages/home/HomePage';
 import { Profile } from './pages/user/Profile';
 import { UserDashboard } from './pages/user/UserDashboard';
 import { Navbar } from './components/layout/Navbar';
+import { VideoTest } from './components/VideoTest';
 
 // Admin imports
 import { AdminDashboard } from './pages/admin/Dashboard';
@@ -25,6 +26,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 import { useSocket } from './hooks/useSocket';
+import { ProximityVideoOverlay } from './components/ProximityVideoOverlay';
 import { useState } from 'react';
 
 const SPACE_OPTIONS = [
@@ -110,6 +112,13 @@ const GameView = () => {
         setShowSpacePicker(false);
         triggerCreateRoom({ backgroundUrl: spaceKey, width, height });
     };
+    const selfId = socketSelfId; 
+    const error = null;
+
+    const createRoom = React.useCallback(() => {
+        console.log("[APP] Triggering room creation...");
+        triggerCreateRoom();
+    }, [triggerCreateRoom]);
 
     React.useEffect(() => {
         if (urlCode && !currentRoomCode) {
@@ -267,6 +276,13 @@ const GameView = () => {
                     </form>
                 </div>
             </main>
+            {/* Proximity video — renders fixed above the canvas when someone is nearby */}
+            <ProximityVideoOverlay
+                selfId={selfId}
+                players={users}
+                roomCode={effectiveRoomCode}
+                userId={selfId || 'guest'}
+            />
         </div>
     );
 };
@@ -302,6 +318,7 @@ function App() {
                         </ProtectedRoute>
                     }
                 />
+                <Route path="/video-test" element={<VideoTest />} />
                 <Route
                     path="/create-space"
                     element={

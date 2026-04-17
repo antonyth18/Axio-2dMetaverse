@@ -298,6 +298,22 @@ export const useSocket = ({ url, token, roomCode, joinMetadata, onRoomCreated }:
     const movePlayer = useCallback((x: number, y: number, direction: string) => {
         if (socketRef.current && isConnected) {
             socketRef.current.emit("player_move", { x, y, direction });
+            
+            // Update local player state so React hooks (like proximity video) 
+            // know where we actually are, instead of our spawn point!
+            setPlayers(prev => {
+                const myId = socketRef.current?.id;
+                if (!myId || !prev[myId]) return prev;
+                return {
+                    ...prev,
+                    [myId]: {
+                        ...prev[myId],
+                        x,
+                        y,
+                        direction
+                    }
+                };
+            });
         }
     }, [isConnected]);
 
