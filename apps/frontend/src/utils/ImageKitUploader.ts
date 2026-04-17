@@ -1,4 +1,4 @@
-import { authService } from "@/service/authService";
+import { authService } from "@/services/authService";
 import {
   ImageKitAbortError,
   ImageKitInvalidRequestError,

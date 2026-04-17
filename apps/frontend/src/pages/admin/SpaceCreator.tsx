@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, PlusCircle, Map, Ruler } from "lucide-react"; // Re-importing icons
 import axios from "axios";
 import { BACKEND_URL } from "@/config";
-import { mapService } from "@/service/mapservice";
+import { mapService } from "@/services/mapservice";
 
 interface MapOption {
   id: string;
@@ -110,8 +110,7 @@ export const SpaceCreator: React.FC = () => {
         setLoading(false);
         return;
       }
-      payload.width = w;
-      payload.height = h;
+      payload.dimensions = dimensions; // Backend expects "LxW" format
     }
 
     try {
@@ -120,7 +119,7 @@ export const SpaceCreator: React.FC = () => {
           Authorization: `Bearer ${localStorage.getItem("authToken")}`,
         },
       });
-      navigate(`/user/spaces`);
+      navigate(`/dashboard`);
     } catch (err: any) {
       console.error("Failed to create space", err);
     } finally {

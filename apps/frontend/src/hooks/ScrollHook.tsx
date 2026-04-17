@@ -1,46 +1,16 @@
-import { useRef, useCallback, useEffect } from "react";
+import { useCallback } from 'react';
 
-export const useScrollAnimation = (customThreshold = 0.1) => {
-  const observerRef = useRef<IntersectionObserver | null>(null);
-  const observedElementsRef = useRef<Set<Element>>(new Set());
-
-  const initObserver = useCallback(() => {
-    if (observerRef.current) {
-      observerRef.current.disconnect();
-    }
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("is-visible");
-          } else {
-            // entry.target.classList.remove('is-visible'); // Uncomment to re-animate on scroll up
-          }
-        });
-      },
-      { threshold: customThreshold },
-    );
-  }, [customThreshold]);
-
-  useEffect(() => {
-    initObserver();
-    const currentObservedElements = new Set(observedElementsRef.current); // Create a copy
-    currentObservedElements.forEach((el) => {
-      if (el && observerRef.current) observerRef.current.observe(el);
-    });
-    return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-      }
-    };
-  }, [initObserver]);
-
-  const addToObserve = useCallback((el: Element | null) => {
-    if (el && observerRef.current && !observedElementsRef.current.has(el)) {
-      observedElementsRef.current.add(el);
-      observerRef.current.observe(el);
-    }
-  }, []);
-
-  return addToObserve;
+export const useScrollAnimation = (threshold = 0.1) => {
+  return useCallback((el: HTMLElement | null) => {
+    if (!el) return;
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.remove('opacity-0', 'translate-y-8', 'translate-y-12');
+          entry.target.classList.add('opacity-100', 'translate-y-0');
+        }
+      });
+    }, { threshold });
+    observer.observe(el);
+  }, [threshold]);
 };

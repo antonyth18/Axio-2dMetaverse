@@ -10,9 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input"; // Added Input component
 import { Label } from "@/components/ui/label";
 import UploadExample from "@/components/ui/imageupload"; // Assuming this is your beautifully styled uploader
-import { elementService } from "@/service/elementService";
-import { backgroundService } from "@/service/backgroundService";
-import { mapService, type MapItem } from "@/service/mapservice";
+import { elementService } from "@/services/elementService";
+import { backgroundService } from "@/services/backgroundService";
+import { mapService, type MapItem } from "@/services/mapservice";
 import {
   CanvasEditor,
   type Asset,

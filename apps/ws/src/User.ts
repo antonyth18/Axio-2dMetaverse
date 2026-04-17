@@ -91,36 +91,47 @@ export class User {
         switch (parseData.type) {
           case "join": {
             const { spaceId, token } = parseData.payload;
+            console.log(`[WS:JOIN] Request for Space: ${spaceId}`);
+
             let payload;
             try {
               payload = jwt.verify(token, JWT_PASSWORD) as { id: string };
-            } catch {
+              console.log(`[WS:JOIN] JWT Verified for User: ${payload.id}`);
+            } catch (err) {
+              console.error(`[WS:JOIN] JWT Verification Failed:`, err);
               this.ws.close();
               return;
             }
             this.userId = payload.id;
 
-            this.space = await dbClient.space.findUnique({
-              where: { id: spaceId },
-              include: {
-                elements: {
-                  select: {
-                    id: true,
-                    x: true,
-                    y: true,
-                    mapElement: {
-                      select: {
-                        id: true,
-                        imageUrl: true,
-                        width: true,
-                        height: true,
-                        static: true,
+            try {
+              this.space = await dbClient.space.findUnique({
+                where: { id: spaceId },
+                include: {
+                  elements: {
+                    select: {
+                      id: true,
+                      x: true,
+                      y: true,
+                      mapElement: {
+                        select: {
+                          id: true,
+                          imageUrl: true,
+                          width: true,
+                          height: true,
+                          static: true,
+                        },
                       },
                     },
                   },
                 },
-              },
-            });
+              });
+              console.log(`[WS:JOIN] Space lookup result: ${this.space ? "Found" : "Not Found"}`);
+            } catch (dbErr) {
+              console.error(`[WS:JOIN] DB Lookup Error:`, dbErr);
+              this.send({ type: "error", payload: { message: "Internal server error during join" } });
+              return;
+            }
 
             if (!this.space) {
               this.send({ type: "error", payload: { message: "Space not found" } });

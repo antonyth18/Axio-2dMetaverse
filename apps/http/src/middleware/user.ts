@@ -9,10 +9,15 @@ export const userMiddleware = (
 ) => {
   const header = req.headers["authorization"];
   const token = header && header.split(" ")[1];
-  console.log("token", token);
+  console.log("--- Auth Debug ---");
+  console.log("Token received:", token ? "Yes (starts with " + token.substring(0, 10) + "...)" : "No");
+  console.log("JWT_PASSWORD present:", !!JWT_PASSWORD);
+  console.log("JWT_PASSWORD length:", JWT_PASSWORD?.length);
+
   if (!token) {
+    console.log("Auth Failed: No token");
     return res.status(401).json({
-      message: "Unauthorized",
+      message: "Unauthorized - No token provided",
     });
   }
   try {
@@ -22,11 +27,12 @@ export const userMiddleware = (
     };
 
     req.userId = decoded.id;
-    console.log("req.userId", req.userId);
+    console.log("Auth Success: UserID", req.userId);
     next();
-  } catch (err) {
+  } catch (err: any) {
+    console.log("Auth Failed: JWT verify error:", err.message);
     return res.status(401).json({
-      message: "Unauthorized",
+      message: "Unauthorized - " + err.message,
     });
   }
 };

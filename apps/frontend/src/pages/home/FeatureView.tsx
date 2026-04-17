@@ -1,48 +1,33 @@
-import { FeatureCard } from "@/components/ui/featureCard";
-import { Gamepad2, Palette, Server, UsersRound } from "lucide-react";
+import React from "react";
+import { Gamepad2, Palette, Server, UsersRound } from "../../components/ui/icons";
+
+// Feature card tile
+const FeatureCard = ({ icon: Icon, title, description }: any) => (
+  <div className="bg-white p-6 rounded border-4 border-black hover:-translate-y-1 transition-transform shadow-[6px_6px_0_0_#000000] hover:shadow-[4px_4px_0_0_#000000]">
+    <div className="w-16 h-16 bg-lime-500 rounded flex items-center justify-center mb-6 border-2 border-black">
+      <Icon className="w-8 h-8 text-black" />
+    </div>
+    <h3 className="text-2xl font-black text-black mb-3">{title}</h3>
+    <p className="text-gray-700 font-medium leading-relaxed">{description}</p>
+  </div>
+);
 
 export const FeaturesView = () => {
   const features = [
-    {
-      icon: Palette,
-      title: "Cross-Game Avatars",
-      description:
-        "Your unique pixel identity travels with you across all games and experiences.",
-      delay: 0,
-    },
-    {
-      icon: Server,
-      title: "Player-Driven Economy",
-      description:
-        "Trade, craft, and build your fortune in a dynamic, community-led marketplace.",
-      delay: 150,
-    },
-    {
-      icon: UsersRound,
-      title: "Vibrant Communities",
-      description:
-        "Connect with friends, join guilds, and participate in exciting global events.",
-      delay: 300,
-    },
-    {
-      icon: Gamepad2,
-      title: "Endless Games",
-      description:
-        "Discover a constantly expanding universe of games created by us and the community.",
-      delay: 450,
-    },
+    { icon: Palette, title: "Custom Avatars", description: "Your unique pixel identity travels with you across the arena." },
+    { icon: Server, title: "Real-Time Sync", description: "Experience zero-latency movement and interactions." },
+    { icon: UsersRound, title: "Proximity Chat", description: "Connect with friends dynamically as you walk near them." },
+    { icon: Gamepad2, title: "Physics Engine", description: "Interact with the world using our robust 2D physics system." },
   ];
+
   return (
-    <section id="features" className="py-20 md:py-28 bg-slate-900">
-      {" "}
-      {/* Reverted to standard section for home page flow */}
-      <div className="container mx-auto px-4 md:px-6">
-        <h2 className="text-4xl md:text-5xl font-bold text-center mb-4 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400">
-          Why PixelVerse?
+    <section className="py-20 md:py-28 bg-gray-50 border-t-4 border-black">
+      <div className="container mx-auto px-4 md:px-6 max-w-6xl">
+        <h2 className="text-4xl md:text-5xl font-black text-center mb-4 text-black uppercase tracking-tight">
+          Why MetaVerse?
         </h2>
-        <p className="text-xl text-slate-400 text-center mb-16 md:mb-20 max-w-2xl mx-auto">
-          Experience a new dimension of gaming with features designed for true
-          immersion and connection.
+        <p className="text-xl text-gray-700 text-center mb-16 max-w-2xl mx-auto font-medium">
+          Experience a new dimension of gaming with features designed for true immersion.
         </p>
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
           {features.map((feature, index) => (

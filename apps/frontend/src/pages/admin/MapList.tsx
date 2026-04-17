@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 
 // Services & Config
-import { spaceService } from "@/service/spaceService";
+import { spaceService } from "@/services/spaceService";
 import { BACKEND_URL } from "@/config";
 import { AnimatedPageWrapper } from "@/components/ui/AnimatedPageWrapper";
 

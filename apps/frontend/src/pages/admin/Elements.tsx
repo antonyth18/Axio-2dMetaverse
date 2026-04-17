@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import UploadExample from "@/components/ui/imageupload";
-import { elementService } from "@/service/elementService";
+import { elementService } from "@/services/elementService";
 import {
   PlusCircle,
   Image as ImageIcon,

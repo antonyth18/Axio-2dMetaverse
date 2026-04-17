@@ -8,9 +8,9 @@
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "db:generate": "cd packages/db && npx prisma generate && cd ../..",
-    "db:migrate": "cd packages/db && npx prisma migrate dev --name init && cd ../..",
-    "db:seed": "cd packages/db && npx tsx prisma/seed.ts && cd ../..",
+    "db:generate": "npx prisma generate --schema packages/db/prisma/schema.prisma",
+    "db:migrate": "npx prisma migrate dev --name init --schema packages/db/prisma/schema.prisma",
+    "db:seed": "npx tsx packages/db/prisma/seed.ts",
     "start:http": "cd apps/http && npm run dev",
     "start:ws": "cd apps/ws && npm run dev",
     "start:frontend": "cd apps/frontend && npm run dev"

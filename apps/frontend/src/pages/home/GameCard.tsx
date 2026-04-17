@@ -1,5 +1,5 @@
 import { useScrollAnimation } from "@/hooks/ScrollHook";
-import { Gamepad2, ArrowRight, MessageSquare, Twitter } from "lucide-react";
+import { Gamepad2, ArrowRight, MessageSquare, Twitter } from "../../components/ui/icons";
 import { useRef, useEffect } from "react";
 
 type GameCardProps = {
@@ -18,60 +18,45 @@ export const GameCard = ({
   delay,
 }: GameCardProps) => {
   const cardRef = useRef<HTMLDivElement>(null);
-  const addToObserve = useScrollAnimation();
-  useEffect(() => {
-    if (cardRef.current) {
-      cardRef.current.classList.add(
-        "opacity-0",
-        "transform",
-        "translate-y-12",
-        "motion-safe:transition-all",
-        "motion-safe:duration-700",
-        "motion-safe:ease-out",
-      );
-      cardRef.current.style.transitionDelay = `${delay}ms`;
-      addToObserve(cardRef.current);
-    }
-  }, [addToObserve, delay]);
-  const placeholderBg = `bg-gradient-to-br from-${["purple", "cyan", "pink", "blue"][Math.floor(Math.random() * 4)]}-700 to-${["slate", "gray", "zinc", "neutral"][Math.floor(Math.random() * 4)]}-800`;
+  
   return (
     <div
       ref={cardRef}
-      className="bg-slate-800 rounded-xl shadow-xl overflow-hidden group transition-all duration-300 hover:shadow-purple-500/30 transform hover:scale-105 border border-slate-700 hover:border-purple-500/50"
+      className="bg-white rounded overflow-hidden group transition-transform duration-300 hover:-translate-y-1 border-4 border-black shadow-[6px_6px_0_0_#000000] hover:shadow-[4px_4px_0_0_#000000]"
     >
       <div
-        className={`w-full h-48 ${imageUrl ? "" : placeholderBg} flex items-center justify-center overflow-hidden`}
+        className={`w-full h-48 bg-gray-200 border-b-4 border-black flex items-center justify-center overflow-hidden relative`}
       >
         {imageUrl ? (
           <img
             src={imageUrl}
             alt={title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             onError={(e) => {
               const target = e.target as HTMLImageElement;
-              target.src = `https://placehold.co/600x400/334155/e2e8f0?text=Error`;
+              target.src = `https://placehold.co/600x400/eeeeee/000000?text=Error`;
             }}
           />
         ) : (
-          <Gamepad2 size={64} className="text-slate-500 opacity-50" />
+          <Gamepad2 size={64} className="text-black opacity-30" />
         )}
       </div>
       <div className="p-6">
-        <span className="inline-block bg-cyan-500/20 text-cyan-300 text-xs font-semibold px-2.5 py-1 rounded-full mb-2">
+        <span className="inline-block bg-lime-500 border-2 border-black text-black text-xs font-bold px-3 py-1 rounded mb-3 uppercase tracking-wider shadow-[2px_2px_0_0_#000000]">
           {genre}
         </span>
-        <h3 className="text-xl font-semibold text-slate-100 mb-2">{title}</h3>
-        <p className="text-slate-400 text-sm leading-relaxed line-clamp-3">
+        <h3 className="text-2xl font-black text-black mb-2 uppercase">{title}</h3>
+        <p className="text-gray-700 font-medium text-base leading-relaxed line-clamp-3 mb-6">
           {description}
         </p>
         <a
           href="#"
-          className="inline-block mt-4 text-purple-400 hover:text-purple-300 font-medium group/link"
+          className="inline-flex items-center justify-center w-full bg-white border-2 border-black text-black font-bold uppercase py-2.5 hover:bg-lime-500 transition-colors shadow-[4px_4px_0_0_#000000] active:shadow-none active:translate-y-1 active:translate-x-1 rounded group/link"
         >
-          Learn More{" "}
+          Learn More
           <ArrowRight
-            size={16}
-            className="inline ml-1 transition-transform duration-200 group-hover/link:translate-x-1"
+            size={20}
+            className="ml-2 transition-transform duration-200 group-hover/link:translate-x-1"
           />
         </a>
       </div>
@@ -79,7 +64,7 @@ export const GameCard = ({
   );
 };
 
-// Game Showcase Section (Now a component for 'home' page)
+// Game Showcase Section
 export const GameShowcaseView = () => {
   const games = [
     {
@@ -87,41 +72,40 @@ export const GameShowcaseView = () => {
       description: "Embark on epic quests...",
       genre: "RPG Adventure",
       delay: 0,
-      imageUrl: "https://placehold.co/600x400/2D3748/E2E8F0?text=Pixel+Raiders",
+      imageUrl: "https://placehold.co/600x400/eeeeee/000000?text=Pixel+Raiders",
     },
     {
       title: "Cosmic Cartels",
       description: "Build your intergalactic trading empire...",
       genre: "Sci-Fi Strategy",
       delay: 150,
-      imageUrl:
-        "https://placehold.co/600x400/4A5568/E2E8F0?text=Cosmic+Cartels",
+      imageUrl: "https://placehold.co/600x400/eeeeee/000000?text=Cosmic+Cartels",
     },
     {
       title: "Blocky Racers",
       description: "High-octane pixel racing action!",
       genre: "Racing",
       delay: 300,
-      imageUrl: "https://placehold.co/600x400/718096/E2E8F0?text=Blocky+Racers",
+      imageUrl: "https://placehold.co/600x400/eeeeee/000000?text=Blocky+Racers",
     },
     {
       title: "MetaTown Sim",
       description: "Design and manage your own bustling pixel city.",
       genre: "Simulation",
       delay: 450,
-      imageUrl: "https://placehold.co/600x400/A0AEC0/E2E8F0?text=MetaTown+Sim",
+      imageUrl: "https://placehold.co/600x400/eeeeee/000000?text=MetaTown+Sim",
     },
   ];
   return (
     <section
       id="games"
-      className="py-20 md:py-28 bg-gradient-to-b from-slate-900 to-slate-950"
+      className="py-20 md:py-28 bg-white"
     >
       <div className="container mx-auto px-4 md:px-6">
-        <h2 className="text-4xl md:text-5xl font-bold text-center mb-4 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400">
+        <h2 className="text-4xl md:text-5xl font-black text-center mb-4 text-black uppercase tracking-tight">
           Featured Games
         </h2>
-        <p className="text-xl text-slate-400 text-center mb-16 md:mb-20 max-w-2xl mx-auto">
+        <p className="text-xl text-gray-600 font-medium text-center mb-16 md:mb-20 max-w-2xl mx-auto">
           A glimpse into the diverse experiences waiting for you in the
           PixelVerse.
         </p>
@@ -130,10 +114,10 @@ export const GameShowcaseView = () => {
             <GameCard key={index} {...game} />
           ))}
         </div>
-        <div className="text-center mt-16">
+        <div className="text-center mt-20">
           <button
             onClick={() => alert("Redirect to all games page!")}
-            className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-700 hover:to-cyan-600 text-white px-8 py-3.5 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+            className="text-lg font-extrabold uppercase tracking-wide bg-lime-500 hover:bg-lime-400 text-black px-10 py-5 rounded shadow-[6px_6px_0_0_#000000] border-4 border-black transition-all duration-300 active:translate-y-1 active:translate-x-1 active:shadow-[2px_2px_0_0_#000000]"
           >
             Discover All Games
           </button>
@@ -143,32 +127,31 @@ export const GameShowcaseView = () => {
   );
 };
 
-// Community Section (Now a component for 'home' page)
+// Community Section
 export const CommunityView = () => {
   return (
-    <section id="community" className="py-20 md:py-28 bg-slate-900">
+    <section id="community" className="py-20 md:py-28 bg-gray-100 border-t-4 border-black border-b-4">
       <div className="container mx-auto px-4 md:px-6">
-        <h2 className="text-4xl md:text-5xl font-bold text-center mb-4 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400">
+        <h2 className="text-4xl md:text-5xl font-black text-center mb-4 text-black uppercase tracking-tight">
           Join Our Community
         </h2>
-        <p className="text-xl text-slate-400 text-center mb-12 max-w-2xl mx-auto">
-          Connect with fellow PixelVerse explorers, share your creations, and
-          stay updated.
+        <p className="text-xl text-gray-700 font-medium text-center mb-12 max-w-2xl mx-auto">
+          Connect with fellow explorers, share your creations, and stay updated.
         </p>
         <div className="flex flex-col md:flex-row justify-center items-center gap-6 md:gap-10">
           <a
             href="#"
-            className="flex items-center space-x-3 bg-slate-800 hover:bg-slate-700/80 border border-slate-700 hover:border-purple-500 text-slate-200 px-8 py-4 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105"
+            className="flex items-center justify-center space-x-3 bg-white hover:bg-lime-500 border-4 border-black text-black px-10 py-5 rounded shadow-[6px_6px_0_0_#000000] transition-all active:translate-y-1 active:translate-x-1 active:shadow-[2px_2px_0_0_#000000] group"
           >
-            <MessageSquare size={32} className="text-purple-400" />
-            <span className="text-xl font-semibold">Join our Discord</span>
+            <MessageSquare size={32} className="text-black group-hover:scale-110 transition-transform" />
+            <span className="text-xl font-black uppercase">Discord</span>
           </a>
           <a
             href="#"
-            className="flex items-center space-x-3 bg-slate-800 hover:bg-slate-700/80 border border-slate-700 hover:border-cyan-500 text-slate-200 px-8 py-4 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105"
+            className="flex items-center justify-center space-x-3 bg-white hover:bg-lime-500 border-4 border-black text-black px-10 py-5 rounded shadow-[6px_6px_0_0_#000000] transition-all active:translate-y-1 active:translate-x-1 active:shadow-[2px_2px_0_0_#000000] group"
           >
-            <Twitter size={32} className="text-cyan-400" />
-            <span className="text-xl font-semibold">Follow on Twitter</span>
+            <Twitter size={32} className="text-black group-hover:scale-110 transition-transform" />
+            <span className="text-xl font-black uppercase">Twitter</span>
           </a>
         </div>
       </div>
@@ -176,5 +159,5 @@ export const CommunityView = () => {
   );
 };
 export const JoinCtaTarget = () => (
-  <div id="join-cta-target" className="py-4 bg-slate-950"></div>
+  <div id="join-cta-target" className="py-4 bg-white"></div>
 );

@@ -35,7 +35,19 @@ router.post("/signup", async (req, res) => {
         avatarId: parsedData.data.avatarId, // Include avatarId if provided
       },
     });
-    res.json({ userId: user.id });
+
+    const token = jwt.sign({
+      id: user.id,
+      username: user.username,
+      role: user.role,
+    }, JWT_PASSWORD as string, {
+      expiresIn: "10h"
+    });
+
+    res.json({ 
+      userId: user.id,
+      token: token
+    });
   } catch (error) {
     console.log(error);
     return res.status(400).json({ message: "User Already Exists" });

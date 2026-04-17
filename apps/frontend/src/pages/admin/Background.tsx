@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import UploadExample from "@/components/ui/imageupload";
-import { backgroundService } from "@/service/backgroundService";
+import { backgroundService } from "@/services/backgroundService";
 import {
   PlusCircle,
   ImagePlus,

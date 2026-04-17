@@ -151,11 +151,8 @@ spaceRouter.delete("/:spaceId", userMiddleware, async(req, res) => {
 
 spaceRouter.get("/all", userMiddleware, async (req, res) => {
    try {
-    const spaces = await dbClient.space.findMany({
-        where: {
-            creatorId: req.userId!
-        }
-    });
+    // Return all spaces for discovery/starter purposes.
+    const spaces = await dbClient.space.findMany();
 
     res.json({
         spaces: spaces.map(s => ({
@@ -163,6 +160,8 @@ spaceRouter.get("/all", userMiddleware, async (req, res) => {
             name: s.name,
             thumbnail: s.thumbnail,
             dimensions: `${s.width}x${s.height}`,
+            creatorId: s.creatorId,
+            isStarter: s.creatorId !== req.userId
         }))
     })
 

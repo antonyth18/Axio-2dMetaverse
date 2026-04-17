@@ -1,8 +1,7 @@
+import "./env";
 import { WebSocketServer } from "ws";
 import { User } from "./User";
-import dotenv from "dotenv";
 import { PORT } from "./config";
-dotenv.config();
 const port = typeof PORT === "string" ? parseInt(PORT, 10) : PORT || 8080;
 console.log(`WebSocket server is running on port ${port}`);
 

@@ -8,7 +8,7 @@ import type {
   ChatMessage,
   IncomingMessage,
 } from "@/types";
-import { WebSocketService } from "@/service/websocket";
+import { WebSocketService } from "@/services/websocket";
 
 interface UseWebSocketProps {
   url: string;
@@ -41,22 +41,32 @@ export const useWebSocket = ({
     (msg: IncomingMessage) => {
       switch (msg.type) {
         case "space-joined":
+          console.log("Joined space:", msg.payload);
           setSelfId(msg.payload.userId);
-          const allUsers: Record<string, UserState> = {
+          
+          // Use a local variable to avoid stale state issues in the follow-up calls
+          const initialUsers: Record<string, UserState> = {
             [msg.payload.userId]: {
               id: msg.payload.userId,
               x: msg.payload.spawn.x,
               y: msg.payload.spawn.y,
               direction: "down",
-            },
+            }
           };
-          msg.payload.users.forEach((u) => {
-            allUsers[u.id] = { id: u.id, x: u.x, y: u.y, direction: "down" };
-          });
-          setUsers(allUsers);
+
+          if (msg.payload.users) {
+            msg.payload.users.forEach((u: any) => {
+              const id = u.id || u.userId;
+              initialUsers[id] = { id, x: u.x, y: u.y, direction: "down" };
+            });
+          }
+
+          setUsers(initialUsers);
+          setConnected(true); // Now we are officially in and synced
+          
           setAnimatedPositions((prev) => {
             const pos = { ...prev };
-            Object.entries(allUsers).forEach(([id, user]) => {
+            Object.entries(initialUsers).forEach(([id, user]) => {
               pos[id] = {
                 currentPixelX: user.x * CELL_SIZE,
                 currentPixelY: user.y * CELL_SIZE,
@@ -64,8 +74,12 @@ export const useWebSocket = ({
             });
             return pos;
           });
-          msg.payload.users.forEach((u) => loadUserAvatar(u.id));
-          loadUserAvatar(msg.payload.userId);
+
+          // Preload avatars
+          initialUsers[msg.payload.userId] && loadUserAvatar(msg.payload.userId);
+          if (msg.payload.users) {
+            msg.payload.users.forEach((u: any) => loadUserAvatar(u.id || u.userId));
+          }
           break;
 
         case "user-joined":
@@ -172,7 +186,6 @@ export const useWebSocket = ({
       const wsService = new WebSocketService(url, handleMessage);
       wsServiceRef.current = wsService;
       wsService.connect(token, spaceId);
-      setConnected(true);
     }
     prevShouldConnectRef.current = shouldConnectNow;
 

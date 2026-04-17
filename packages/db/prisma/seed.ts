@@ -1,5 +1,9 @@
 import { PrismaClient } from "../src/generated/prisma";
 import bcrypt from "bcrypt";
+import dotenv from "dotenv";
+import path from "path";
+
+dotenv.config();
 
 const prisma = new PrismaClient();
 
@@ -35,7 +39,58 @@ async function main() {
     },
   });
 
-  console.log("✓ Created avatars:", { himmel });
+  const warrior = await prisma.avatar.upsert({
+    where: { id: "warrior" },
+    update: {},
+    create: {
+      id: "warrior",
+      name: "Warrior",
+      Idle_downUrl: "https://ik.imagekit.io/sekvmxelf/idle_down_zK4FESPyS.png",
+      Idle_leftUrl: "https://ik.imagekit.io/sekvmxelf/idle_leftblue_ya4hI1S01.png",
+      Idle_rightUrl: "https://ik.imagekit.io/sekvmxelf/idle-right_LQUsco405.png",
+      Idle_upUrl: "https://ik.imagekit.io/sekvmxelf/idle_up._bH5es-S2Z.png",
+      Run_downUrl: "https://ik.imagekit.io/sekvmxelf/run_down_whvfT30QI.png",
+      Run_leftUrl: "https://ik.imagekit.io/sekvmxelf/run-leftblue_7CC1CEXI0.png",
+      Run_rightUrl: "https://ik.imagekit.io/sekvmxelf/run-right_w4awbqzvh.png",
+      Run_upUrl: "https://ik.imagekit.io/sekvmxelf/run_up_R1Ol8fLSC.png",
+    },
+  });
+
+  const mage = await prisma.avatar.upsert({
+    where: { id: "mage" },
+    update: {},
+    create: {
+      id: "mage",
+      name: "Mage",
+      Idle_downUrl: "https://ik.imagekit.io/sekvmxelf/idle_down_zK4FESPyS.png",
+      Idle_leftUrl: "https://ik.imagekit.io/sekvmxelf/idle_leftblue_ya4hI1S01.png",
+      Idle_rightUrl: "https://ik.imagekit.io/sekvmxelf/idle-right_LQUsco405.png",
+      Idle_upUrl: "https://ik.imagekit.io/sekvmxelf/idle_up._bH5es-S2Z.png",
+      Run_downUrl: "https://ik.imagekit.io/sekvmxelf/run_down_whvfT30QI.png",
+      Run_leftUrl: "https://ik.imagekit.io/sekvmxelf/run-leftblue_7CC1CEXI0.png",
+      Run_rightUrl: "https://ik.imagekit.io/sekvmxelf/run-right_w4awbqzvh.png",
+      Run_upUrl: "https://ik.imagekit.io/sekvmxelf/run_up_R1Ol8fLSC.png",
+    },
+  });
+
+  const rogue = await prisma.avatar.upsert({
+    where: { id: "rogue" },
+    update: {},
+    create: {
+      id: "rogue",
+      name: "Rogue",
+      Idle_downUrl: "https://ik.imagekit.io/sekvmxelf/idle_down_zK4FESPyS.png",
+      Idle_leftUrl: "https://ik.imagekit.io/sekvmxelf/idle_leftblue_ya4hI1S01.png",
+      Idle_rightUrl: "https://ik.imagekit.io/sekvmxelf/idle-right_LQUsco405.png",
+      Idle_upUrl: "https://ik.imagekit.io/sekvmxelf/idle_up._bH5es-S2Z.png",
+      Run_downUrl: "https://ik.imagekit.io/sekvmxelf/run_down_whvfT30QI.png",
+      Run_leftUrl: "https://ik.imagekit.io/sekvmxelf/run-leftblue_7CC1CEXI0.png",
+      Run_rightUrl: "https://ik.imagekit.io/sekvmxelf/run-right_w4awbqzvh.png",
+      Run_upUrl: "https://ik.imagekit.io/sekvmxelf/run_up_R1Ol8fLSC.png",
+    },
+  });
+
+  console.log("✓ Created avatars:", { himmel, warrior, mage, rogue });
 
   // Create Admin User
   const admin = await prisma.user.upsert({
