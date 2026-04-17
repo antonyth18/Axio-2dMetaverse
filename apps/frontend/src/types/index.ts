@@ -60,6 +60,21 @@ export type IncomingMessage =
       type: "user-action";
       payload: { action: string; userId: string; emoji?: string };
     }
+  | { type: "room-created"; payload: { roomCode: string } }
+  | {
+      type: "room-joined";
+      payload: {
+        userId: string;
+        roomCode: string;
+        spawn: { x: number; y: number };
+        users: { id: string; x: number; y: number }[];
+        metadata: {
+          backgroundUrl: string;
+          width: number;
+          height: number;
+        };
+      };
+    }
   | { type: "message-received"; payload: { message: string; userId: string } }
   | { type: "error"; payload: { message: string } };
 

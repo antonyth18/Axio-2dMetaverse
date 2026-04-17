@@ -4,20 +4,26 @@ import type { IncomingMessage } from "@/types";
 type MessageHandler = (msg: IncomingMessage) => void;
 
 export class WebSocketService {
-  private ws: WebSocket | null = null;
-  private url: string;
-  private onMessage: MessageHandler;
+  private messageQueue: any[] = [];
 
   constructor(url: string, onMessage: MessageHandler) {
     this.url = url;
     this.onMessage = onMessage;
   }
 
-  connect(token: string, spaceId: string) {
+  connect(token: string, spaceId?: string) {
     this.ws = new WebSocket(this.url);
 
     this.ws.onopen = () => {
-      this.send({ type: "join", payload: { token, spaceId } });
+      console.log("[WS] Connection opened");
+      if (spaceId) {
+        this.send({ type: "join", payload: { token, spaceId } });
+      }
+      // Flush queue
+      while (this.messageQueue.length > 0) {
+        const payload = this.messageQueue.shift();
+        this.ws?.send(JSON.stringify(payload));
+      }
     };
 
     this.ws.onmessage = (ev) => {
@@ -30,6 +36,7 @@ export class WebSocketService {
     };
 
     this.ws.onclose = () => {
+      console.log("[WS] Connection closed");
       this.ws = null;
     };
   }
@@ -37,7 +44,17 @@ export class WebSocketService {
   send(payload: any) {
     if (this.ws?.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(payload));
+    } else {
+      this.messageQueue.push(payload);
     }
+  }
+
+  createRoom() {
+    this.send({ type: "create_room", payload: {} });
+  }
+
+  joinRoom(token: string, roomCode: string) {
+    this.send({ type: "join_room", payload: { token, roomCode } });
   }
 
   move(x: number, y: number) {
@@ -45,7 +62,7 @@ export class WebSocketService {
   }
 
   sendAction(action: string, emoji?: string) {
-    this.send({ type: "user-action", payload: { action, userId: "", emoji } });
+    this.send({ type: "user-action", payload: { action, emoji } });
   }
 
   sendMessage(message: string) {

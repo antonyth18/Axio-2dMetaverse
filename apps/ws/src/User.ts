@@ -89,6 +89,87 @@ export class User {
       try {
         const parseData = JSON.parse(data.toString());
         switch (parseData.type) {
+          case "create_room": {
+            const roomCode = RoomManager.getInstance().generateRoomCode();
+            RoomManager.getInstance().createRoom(roomCode);
+            
+            // Pick a consistent space for this arena
+            const defaultSpace = await dbClient.space.findFirst({
+              include: { elements: { include: { mapElement: true } } }
+            });
+            if (defaultSpace) {
+                RoomManager.getInstance().setRoomSpace(roomCode, defaultSpace);
+            }
+
+            this.send({
+              type: "room-created",
+              payload: { roomCode },
+            });
+            break;
+          }
+          case "join_room": {
+            const { roomCode, token } = parseData.payload;
+            console.log(`[WS:JOIN_ROOM] Request for Code: ${roomCode}`);
+
+            let payload;
+            try {
+              payload = jwt.verify(token, JWT_PASSWORD) as { id: string };
+            } catch (err) {
+              console.error(`[WS:JOIN_ROOM] JWT Verification Failed`);
+              this.ws.close();
+              return;
+            }
+            this.userId = payload.id;
+
+            const roomManager = RoomManager.getInstance();
+            if (!roomManager.rooms.has(roomCode)) {
+              this.send({ type: "error", payload: { message: "Room not found" } });
+              return;
+            }
+
+            // Retrieve the shared space from the room manager
+            const sharedSpace = roomManager.getRoomSpace(roomCode);
+
+            if (!sharedSpace) {
+              this.send({ type: "error", payload: { message: "Arena space not initialized" } });
+              return;
+            }
+
+            this.space = sharedSpace;
+            this.spaceId = roomCode; // Using roomCode as the room identifier
+            this.spaceWidth = this.space.width;
+            this.spaceHeight = this.space.height;
+            roomManager.addUser(roomCode, this);
+
+            // Spawn logic
+            this.x = Math.floor(Math.random() * 10);
+            this.y = Math.floor(Math.random() * 10);
+
+            const existing = (roomManager.rooms.get(roomCode)?.users || [])
+              .filter(u => u.userId !== this.userId)
+              .map(u => ({ id: u.userId, x: u.x, y: u.y }));
+
+            this.send({
+              type: "room-joined",
+              payload: {
+                userId: this.userId,
+                roomCode,
+                spawn: { x: this.x, y: this.y },
+                users: existing.map(u => ({ userId: u.id, x: u.x, y: u.y })), // Ensure userId is the key
+                metadata: {
+                    backgroundUrl: this.space.backgroundUrl || 'public',
+                    width: this.space.width,
+                    height: this.space.height
+                }
+              },
+            });
+
+            roomManager.broadcast({
+              type: "user-joined",
+              payload: { userId: this.userId, x: this.x, y: this.y },
+            }, this, roomCode);
+            break;
+          }
           case "join": {
             const { spaceId, token } = parseData.payload;
             console.log(`[WS:JOIN] Request for Space: ${spaceId}`);
@@ -135,14 +216,13 @@ export class User {
 
             if (!this.space) {
               this.send({ type: "error", payload: { message: "Space not found" } });
-              this.ws.close();
               return;
             }
 
             const roomManager = RoomManager.getInstance();
             const room = roomManager.rooms.get(spaceId);
             if (room) {
-              const existingUsers = room.filter(u => u.userId === this.userId);
+              const existingUsers = room.users.filter(u => u.userId === this.userId);
               existingUsers.forEach(existingUser => {
                 existingUser.destroy();
               });
@@ -171,10 +251,9 @@ export class User {
             }
 
 
-            const existing = roomManager
-              .rooms.get(spaceId)!
+            const existing = (roomManager.rooms.get(spaceId)?.users || [])
               .filter((u) => u.userId !== this.userId)
-              .map((u) => ({ id: u.userId, x: u.x, y: u.y }));
+              .map((u) => ({ userId: u.userId, x: u.x, y: u.y }));
 
             this.send({
               type: "space-joined",
@@ -246,14 +325,14 @@ export class User {
               RoomManager.getInstance().broadcast(
                 {
                   type: "user-moved",
-                  payload: { id: this.userId, x: this.x, y: this.y },
+                  payload: { userId: this.userId, x: this.x, y: this.y },
                 },
                 this,
                 this.spaceId
               );
               this.send({
                 type: "user-moved",
-                payload: { id: this.userId, x: this.x, y: this.y },
+                payload: { userId: this.userId, x: this.x, y: this.y },
               });
             } else {
               this.send({

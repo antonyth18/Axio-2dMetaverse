@@ -39,6 +39,11 @@ export class ChatBubble {
             this.messageQueue.shift();
         }
 
+        // Kill any existing fade tweens
+        this.scene.tweens.killTweensOf(this.container);
+        this.container.setAlpha(1);
+        this.container.setVisible(true);
+
         this.renderMessages();
     }
 
@@ -66,59 +71,66 @@ export class ChatBubble {
         content = content.trim();
 
         if (!content) {
-            this.container.setAlpha(0);
+            this.container.setVisible(false);
             return;
         }
 
         this.text.setText(content);
+        this.text.setFontSize(20); // Make it BIG for debugging
+        this.text.setStroke('#ffffff', 4); // White outline
+        
         if (lastIsSystem) {
-            this.text.setColor('#ff4444');
+            this.text.setColor('#ff0000');
         } else {
             this.text.setColor('#000000');
         }
 
         const bounds = this.text.getBounds();
-        const padding = 8;
-        const width = bounds.width + padding * 2;
+        const padding = 10;
+        const width = Math.max(bounds.width + padding * 2, 40);
         const height = bounds.height + padding * 2;
-        const radius = 6;
+        const radius = 8;
 
-        const bgFill = lastIsSystem ? 0xfff0f0 : 0xffffff;
+        const bgFill = lastIsSystem ? 0xffcccc : 0xf0f0f0;
 
-        this.graphics.fillStyle(bgFill, 0.9);
-        this.graphics.lineStyle(2, 0x000000, 1);
+        this.graphics.fillStyle(bgFill, 1);
+        this.graphics.lineStyle(3, 0x000000, 1);
 
         // Draw bubble above the origin
         const bx = -width / 2;
-        const by = -height - 10; // 10px above the player's head
+        const by = -height - 15; 
 
         this.graphics.fillRoundedRect(bx, by, width, height, radius);
         this.graphics.strokeRoundedRect(bx, by, width, height, radius);
 
         // draw tail
         this.graphics.beginPath();
-        this.graphics.moveTo(-5, by + height);
-        this.graphics.lineTo(5, by + height);
-        this.graphics.lineTo(0, by + height + 8);
+        this.graphics.moveTo(-8, by + height);
+        this.graphics.lineTo(8, by + height);
+        this.graphics.lineTo(0, by + height + 10);
         this.graphics.closePath();
         this.graphics.fillPath();
         this.graphics.strokePath();
 
-        this.text.setPosition(0, by + height - padding);
+        this.text.setPosition(0, by + height/2);
+        this.text.setOrigin(0.5, 0.5);
 
-        // Show and fade
+        // Show
+        this.container.setVisible(true);
         this.container.setAlpha(1);
+        this.container.setDepth(1000); // Super high depth
 
         if (this.fadeTimer) {
             this.fadeTimer.remove();
         }
 
-        this.fadeTimer = this.scene.time.delayedCall(4000, () => {
+        this.fadeTimer = this.scene.time.delayedCall(5000, () => {
             this.scene.tweens.add({
                 targets: this.container,
                 alpha: 0,
                 duration: 500,
                 onComplete: () => {
+                    this.container.setVisible(false);
                     this.messageQueue = [];
                 }
             });
@@ -126,8 +138,8 @@ export class ChatBubble {
     }
 
     public updatePosition(x: number, y: number) {
-        // Position above the player
-        this.container.setPosition(x, y - 50); 
+        // Position above the player's head
+        this.container.setPosition(x, y - 60); 
     }
 
     public destroy() {

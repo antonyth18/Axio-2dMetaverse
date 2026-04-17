@@ -6,10 +6,15 @@ interface GameCanvasProps {
     users: Record<string, any>;
     chatMessages: any[];
     selfId: string | null;
-    onMove: (x: number, y: number) => void;
+    onMove: (x: number, y: number, direction: string) => void;
+    roomMetadata?: {
+        backgroundUrl: string;
+        width: number;
+        height: number;
+    } | null;
 }
 
-export const GameCanvas: React.FC<GameCanvasProps> = ({ users, chatMessages, selfId, onMove }) => {
+export const GameCanvas: React.FC<GameCanvasProps> = ({ users, chatMessages, selfId, onMove, roomMetadata }) => {
     const gameContainerRef = useRef<HTMLDivElement>(null);
     const gameRef = useRef<Phaser.Game | null>(null);
     const [sceneReady, setSceneReady] = useState(false);
@@ -58,6 +63,13 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({ users, chatMessages, sel
         };
     }, []);
 
+    // Sync registry when logic props change
+    useEffect(() => {
+        if (gameRef.current) {
+            gameRef.current.registry.set('onMove', onMove);
+        }
+    }, [onMove]);
+
     // Update Users
     useEffect(() => {
         if (sceneReady && gameRef.current) {
@@ -69,16 +81,30 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({ users, chatMessages, sel
         }
     }, [users, sceneReady, selfId]);
 
+    // Update Room Metadata
+    useEffect(() => {
+        if (sceneReady && gameRef.current && roomMetadata) {
+            const scene = gameRef.current.scene.getScene('MainScene');
+            if (scene) {
+                scene.events.emit('arena-metadata-update', roomMetadata);
+            }
+        }
+    }, [roomMetadata, sceneReady]);
+
     // Update Chat
     useEffect(() => {
         if (sceneReady && gameRef.current && chatMessages.length > processedChatCount.current) {
+            console.log(`[CANVAS] New chat messages detected: ${chatMessages.length - processedChatCount.current}`);
             const scene = gameRef.current.scene.getScene('MainScene');
             if (scene) {
                 // Emit only the new messages
                 for (let i = processedChatCount.current; i < chatMessages.length; i++) {
+                    console.log(`[CANVAS] Bridging chat to Phaser:`, chatMessages[i]);
                     scene.events.emit('networkChatEvent', chatMessages[i]);
                 }
                 processedChatCount.current = chatMessages.length;
+            } else {
+                console.warn("[CANVAS] MainScene not found during chat bridge!");
             }
         }
     }, [chatMessages, sceneReady]);

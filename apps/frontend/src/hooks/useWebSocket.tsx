@@ -36,15 +36,66 @@ export const useWebSocket = ({
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isMovingSelf, setIsMovingSelf] = useState(false);
+  const [currentRoomCode, setCurrentRoomCode] = useState<string | null>(null);
+  const [roomMetadata, setRoomMetadata] = useState<{
+    backgroundUrl: string;
+    width: number;
+    height: number;
+  } | null>(null);
   const prevShouldConnectRef = useRef(false);
+
   const handleMessage = useCallback(
     (msg: IncomingMessage) => {
       switch (msg.type) {
+        case "room-created":
+          console.log("Room created:", msg.payload.roomCode);
+          setCurrentRoomCode(msg.payload.roomCode);
+          break;
+
+        case "room-joined":
+          console.log("Joined room:", msg.payload.roomCode, msg.payload.metadata);
+          setCurrentRoomCode(msg.payload.roomCode);
+          setRoomMetadata(msg.payload.metadata);
+          setSelfId(msg.payload.userId);
+          
+          const roomUsers: Record<string, UserState> = {
+            [msg.payload.userId]: {
+              id: msg.payload.userId,
+              x: msg.payload.spawn.x,
+              y: msg.payload.spawn.y,
+              direction: "down",
+            }
+          };
+          if (msg.payload.users) {
+            msg.payload.users.forEach((u: any) => {
+              const id = u.userId;
+              roomUsers[id] = { id, x: u.x, y: u.y, direction: "down" };
+            });
+          }
+          setUsers(roomUsers);
+          setConnected(true);
+          
+          setAnimatedPositions((prev) => {
+            const pos = { ...prev };
+            Object.entries(roomUsers).forEach(([id, user]) => {
+              pos[id] = {
+                currentPixelX: user.x * CELL_SIZE,
+                currentPixelY: user.y * CELL_SIZE,
+              };
+            });
+            return pos;
+          });
+          
+          loadUserAvatar(msg.payload.userId);
+          if (msg.payload.users) {
+            msg.payload.users.forEach((u: any) => loadUserAvatar(u.userId));
+          }
+          break;
+
         case "space-joined":
           console.log("Joined space:", msg.payload);
           setSelfId(msg.payload.userId);
           
-          // Use a local variable to avoid stale state issues in the follow-up calls
           const initialUsers: Record<string, UserState> = {
             [msg.payload.userId]: {
               id: msg.payload.userId,
@@ -56,13 +107,13 @@ export const useWebSocket = ({
 
           if (msg.payload.users) {
             msg.payload.users.forEach((u: any) => {
-              const id = u.id || u.userId;
+              const id = u.userId;
               initialUsers[id] = { id, x: u.x, y: u.y, direction: "down" };
             });
           }
 
           setUsers(initialUsers);
-          setConnected(true); // Now we are officially in and synced
+          setConnected(true);
           
           setAnimatedPositions((prev) => {
             const pos = { ...prev };
@@ -75,10 +126,9 @@ export const useWebSocket = ({
             return pos;
           });
 
-          // Preload avatars
-          initialUsers[msg.payload.userId] && loadUserAvatar(msg.payload.userId);
+          loadUserAvatar(msg.payload.userId);
           if (msg.payload.users) {
-            msg.payload.users.forEach((u: any) => loadUserAvatar(u.id || u.userId));
+            msg.payload.users.forEach((u: any) => loadUserAvatar(u.userId));
           }
           break;
 
@@ -104,7 +154,7 @@ export const useWebSocket = ({
 
         case "user-moved":
           setUsers((prev) => {
-            const old = prev[msg.payload.id];
+            const old = prev[msg.payload.userId];
             if (!old) return prev;
             const dx = msg.payload.x - old.x;
             const dy = msg.payload.y - old.y;
@@ -115,7 +165,7 @@ export const useWebSocket = ({
             else if (dy === -1) direction = "up";
             return {
               ...prev,
-              [msg.payload.id]: {
+              [msg.payload.userId]: {
                 ...old,
                 x: msg.payload.x,
                 y: msg.payload.y,
@@ -123,7 +173,6 @@ export const useWebSocket = ({
               },
             };
           });
-          // Always reset movement lock when we receive server confirmation
           setIsMovingSelf(false);
           break;
 
@@ -179,6 +228,8 @@ export const useWebSocket = ({
   );
 
   useEffect(() => {
+    // Only auto-connect-and-join if we have a valid spaceId.
+    // Otherwise, we wait for a manual joinRoom or createRoom call.
     const shouldConnectNow = shouldConnect && !!token && !!spaceId;
     const wasConnecting = prevShouldConnectRef.current;
 
@@ -186,8 +237,13 @@ export const useWebSocket = ({
       const wsService = new WebSocketService(url, handleMessage);
       wsServiceRef.current = wsService;
       wsService.connect(token, spaceId);
+    } else if (shouldConnect && !!token && !spaceId && !wasConnecting && !connected) {
+      // Connect without auto-joining a space (for arena rooms)
+      const wsService = new WebSocketService(url, handleMessage);
+      wsServiceRef.current = wsService;
+      wsService.connect(token);
     }
-    prevShouldConnectRef.current = shouldConnectNow;
+    prevShouldConnectRef.current = shouldConnectNow || (shouldConnect && !!token && !spaceId);
 
     return () => {
       if (!shouldConnect && wsServiceRef.current) {
@@ -241,6 +297,15 @@ export const useWebSocket = ({
     [connected],
   );
 
+  const createRoom = useCallback(() => {
+    wsServiceRef.current?.createRoom();
+  }, []);
+
+  const joinRoom = useCallback((roomCode: string) => {
+    if (!token || !roomCode) return;
+    wsServiceRef.current?.joinRoom(token, roomCode);
+  }, [token]);
+
   return {
     connected,
     setConnected,
@@ -254,8 +319,12 @@ export const useWebSocket = ({
     setChatMessages,
     error,
     isMovingSelf,
+    currentRoomCode,
+    roomMetadata,
     moveUser,
     sendAction,
     sendMessage,
+    createRoom,
+    joinRoom,
   };
 };

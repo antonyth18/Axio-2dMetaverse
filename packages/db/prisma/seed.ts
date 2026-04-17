@@ -191,7 +191,7 @@ async function main() {
       name: "Admin's Metaverse",
       width: 1000,
       height: 800,
-      thumbnail: "https://ik.imagekit.io/sekvmxelf/space_admin.png",
+      thumbnail: "https://placehold.co/600x400/000000/FFFFFF/png?text=Admin+Space",
       backgroundUrl: "https://ik.imagekit.io/sekvmxelf/background_space.png",
       creatorId: admin.id,
       elements: {

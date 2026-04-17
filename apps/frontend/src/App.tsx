@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { GameCanvas } from './game/GameCanvas';
 import { Login } from './pages/auth/Login';
 import { HomePage } from './pages/home/HomePage';
@@ -25,31 +25,71 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     return <>{children}</>;
 };
 
-import { useWebSocket } from './hooks/useWebSocket';
+import { useSocket } from './hooks/useSocket';
 import { useState } from 'react';
 
-// Extracted game wrapper so the canvas only mounts on the /game route
 const GameView = () => {
     const token = localStorage.getItem("authToken");
     const spaceId = localStorage.getItem("spaceId") || "default-space";
     const [chatInput, setChatInput] = useState('');
+    const location = useLocation();
+    const params = new URLSearchParams(location.search);
+    const urlCode = params.get('code');
+
+    // Helper to get userId from JWT
+    const getUserIdFromToken = (token: string) => {
+        try {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            return JSON.parse(jsonPayload).id;
+        } catch (e) {
+            return null;
+        }
+    };
+
+    const userIdFromToken = token ? getUserIdFromToken(token) : null;
+
+    const [currentRoomCode, setCurrentRoomCode] = useState<string | null>(urlCode);
+
+    const handleRoomCreated = React.useCallback((code: string) => {
+        console.log(`[APP] Successfully created room: ${code}`);
+        setCurrentRoomCode(code);
+    }, []);
+
+    const effectiveRoomCode = urlCode || currentRoomCode || null;
 
     const {
-        connected,
-        users,
-        chatMessages,
-        selfId,
-        moveUser,
+        isConnected: connected,
+        players: users,
+        movePlayer: moveUser,
         sendAction,
         sendMessage,
-        error,
-    } = useWebSocket({
-        url: import.meta.env.VITE_WS_URL || 'ws://localhost:8080',
+        chatMessages,
+        roomMetadata,
+        createRoom: triggerCreateRoom,
+        selfId: socketSelfId,
+    } = useSocket({
+        url: import.meta.env.VITE_WS_URL || 'http://localhost:8081',
         token: token || "",
-        spaceId: spaceId,
-        shouldConnect: !!token,
-        loadUserAvatar: async () => {}, // Skip for now, characters handle themselves natively
+        roomCode: effectiveRoomCode,
+        onRoomCreated: handleRoomCreated
     });
+
+    const selfId = socketSelfId || userIdFromToken;
+    const error = null;
+    const createRoom = React.useCallback(() => {
+        console.log("[APP] Triggering room creation...");
+        triggerCreateRoom();
+    }, [triggerCreateRoom]);
+
+    React.useEffect(() => {
+        if (urlCode && !currentRoomCode) {
+            setCurrentRoomCode(urlCode);
+        }
+    }, [urlCode, currentRoomCode]);
 
     const handleChatSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -72,23 +112,31 @@ const GameView = () => {
     return (
         <div className="pt-24 min-h-screen bg-white text-black flex flex-col items-center">
             <header className="mb-4 text-center">
-                <h1 className="text-3xl font-black mb-2">MetaVerse Arena</h1>
-                <p className="mb-4 font-medium uppercase tracking-wider text-sm">
+                <h1 className="text-3xl font-black mb-1 text-black uppercase">MetaVerse Arena</h1>
+                <p className="mb-2 font-medium uppercase tracking-wider text-xs">
                     {error ? (
-                        <span className="text-red-500">Error: {error}</span>
+                        <span className="text-red-500 font-bold">Error: {error}</span>
                     ) : connected ? (
-                        <span className="text-green-600">Connected to space</span>
+                        <span className="text-green-600 font-bold">Connected {currentRoomCode ? `| Arena: ${currentRoomCode}` : ""}</span>
                     ) : (
-                        <span className="text-gray-500 animate-pulse">Connecting to arena...</span>
+                        <span className="text-gray-500 animate-pulse">Establishing secure connection...</span>
                     )}
                 </p>
-                <div className="flex gap-4 items-center justify-center">
+                <div className="flex gap-2 items-center justify-center mb-4">
                     <button
-                        className="px-6 py-2 bg-black text-white font-bold rounded hover:bg-gray-800 transition-colors uppercase text-sm"
+                        className="px-4 py-2 bg-black text-white font-bold rounded hover:bg-gray-800 transition-all uppercase text-xs shadow-[2px_2px_0_0_#000000]"
                         onClick={() => window.location.href = "/dashboard"}
                     >
-                        Back to Dashboard
+                        Dashboard
                     </button>
+                    {!currentRoomCode && (
+                       <button
+                           className="px-4 py-2 bg-lime-500 text-black font-bold rounded hover:bg-lime-400 transition-all uppercase text-xs shadow-[2px_2px_0_0_#000000] border-2 border-black"
+                           onClick={() => createRoom()}
+                       >
+                           Create Arena
+                       </button>
+                    )}
                 </div>
             </header>
             <main className="relative flex justify-center items-center p-4 border-4 border-black rounded shadow-[8px_8px_0_0_#000000] bg-gray-100">
@@ -97,6 +145,7 @@ const GameView = () => {
                     chatMessages={chatMessages} 
                     selfId={selfId}
                     onMove={moveUser} 
+                    roomMetadata={roomMetadata}
                 />
                 <form 
                     onSubmit={handleChatSubmit} 

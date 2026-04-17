@@ -57,10 +57,65 @@ export const UserDashboard: React.FC = () => {
         <div className="text-center font-bold uppercase animate-pulse">Loading spaces...</div>
       ) : filteredSpaces.length === 0 ? (
         <div className="text-center">
-            <p className="text-xl font-bold mb-4">No spaces found.</p>
-            <Link to="/create-space" className="bg-black text-white px-6 py-3 rounded font-bold uppercase">Create one now</Link>
+            <p className="text-xl font-bold mb-4 uppercase">No spaces found.</p>
+            <div className="flex flex-col gap-4 max-w-xs mx-auto">
+               <Link to="/create-space" className="bg-black text-white px-6 py-3 rounded font-black uppercase text-center border-4 border-black shadow-[4px_4px_0_0_#000000] hover:translate-y-1 transition-all">Create New Space</Link>
+               <div className="flex gap-2">
+                   <input 
+                       type="text" 
+                       placeholder="ARENA CODE"
+                       className="flex-1 px-4 py-2 border-4 border-black rounded font-bold uppercase focus:outline-none"
+                       id="arena-code-input"
+                   />
+                   <button 
+                       className="bg-lime-500 text-black px-6 py-2 rounded font-black uppercase border-4 border-black hover:bg-lime-400"
+                       onClick={() => {
+                           const code = (document.getElementById('arena-code-input') as HTMLInputElement)?.value;
+                           if (code) window.location.href = `/game?code=${code.toUpperCase()}`;
+                       }}
+                   >
+                       Join
+                   </button>
+               </div>
+            </div>
         </div>
       ) : (
+        <>
+        {/* Custom Arena Quick Access */}
+        <div className="max-w-6xl mx-auto mb-12 px-4">
+            <div className="bg-lime-100 border-4 border-black p-6 rounded shadow-[8px_8px_0_0_#000000] flex flex-col md:flex-row items-center justify-between gap-6">
+                <div>
+                   <h2 className="text-2xl font-black uppercase mb-1 italic">Arena Combat</h2>
+                   <p className="font-bold text-gray-700 uppercase text-xs">Join a private arena or host your own battleground</p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+                    <div className="flex border-4 border-black rounded overflow-hidden shadow-[4px_4px_0_0_#000000]">
+                        <input 
+                            type="text" 
+                            placeholder="CODE"
+                            className="px-4 py-2 font-bold uppercase focus:outline-none w-32"
+                            id="arena-code-main"
+                        />
+                        <button 
+                            className="bg-black text-white px-6 py-2 font-black uppercase hover:bg-gray-800"
+                            onClick={() => {
+                                const code = (document.getElementById('arena-code-main') as HTMLInputElement)?.value;
+                                if (code) window.location.href = `/game?code=${code.toUpperCase()}`;
+                            }}
+                        >
+                            Join
+                        </button>
+                    </div>
+                    <Link 
+                        to="/game" 
+                        className="bg-white text-black px-8 py-2 rounded font-black uppercase border-4 border-black shadow-[4px_4px_0_0_#000000] hover:translate-y-1 transition-all text-center"
+                    >
+                        Host Private Arena
+                    </Link>
+                </div>
+            </div>
+        </div>
+
         <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 px-4">
           {filteredSpaces.map((space) => (
             <div
@@ -72,6 +127,10 @@ export const UserDashboard: React.FC = () => {
                   src={space.thumbnail || "https://placehold.co/600x400/000000/FFFFFF/png?text=Space"}
                   alt={space.name}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 border-2 border-black"
+                  onError={(e) => {
+                    const img = e.currentTarget;
+                    img.src = "https://placehold.co/600x400/000000/FFFFFF/png?text=Metaverse+Arena";
+                  }}
                   />
               </div>
               <div className="p-6 flex flex-col flex-grow">
@@ -104,6 +163,7 @@ export const UserDashboard: React.FC = () => {
             </div>
           ))}
         </div>
+        </>
       )}
     </div>
   );

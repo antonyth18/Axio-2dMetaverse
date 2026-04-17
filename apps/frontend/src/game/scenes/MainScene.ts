@@ -21,12 +21,10 @@ export class MainScene extends Phaser.Scene {
     }
 
     preload() {
-        // Determine which background to load
-        const bgKey = localStorage.getItem('spaceBackground') || 'public';
-        const bgCfg = BACKGROUND_CONFIGS[bgKey] ?? BACKGROUND_CONFIGS['public'];
-
-        // Load background image
-        this.load.image('background', bgCfg.file);
+        // Load all known backgrounds for arena swapping
+        Object.entries(BACKGROUND_CONFIGS).forEach(([key, cfg]) => {
+            this.load.image(key, cfg.file);
+        });
 
         // Load all avatar spritesheets
         this.load.spritesheet('warrior', '/PNGS/movements/warrior.png', {
@@ -46,15 +44,17 @@ export class MainScene extends Phaser.Scene {
     }
 
     create() {
-        const bgKey = localStorage.getItem('spaceBackground') || 'public';
-        const bgCfg = BACKGROUND_CONFIGS[bgKey] ?? BACKGROUND_CONFIGS['public'];
+        // Choose initial background based on localStorage or default
+        const initialBgKey = localStorage.getItem('spaceBackground') || 'public';
+        const bgCfg = BACKGROUND_CONFIGS[initialBgKey] ?? BACKGROUND_CONFIGS['public'];
         const worldW = bgCfg.width;
         const worldH = bgCfg.height;
 
         this.physics.world.setBounds(0, 0, worldW, worldH);
 
-        const bg = this.add.image(0, 0, 'background');
+        const bg = this.add.image(0, 0, initialBgKey);
         bg.setOrigin(0, 0);
+        bg.setName('background');
         bg.setDisplaySize(worldW, worldH);
 
         this.setupAnimations();
@@ -65,6 +65,7 @@ export class MainScene extends Phaser.Scene {
         // Listen for events emitted from GameCanvas (React)
         this.events.on('networkUsersUpdate', this.handleUsersUpdate, this);
         this.events.on('networkChatEvent', this.handleChatEvent, this);
+        this.events.on('arena-metadata-update', this.handleArenaMetadataUpdate, this);
         this.events.on('setSelfId', (id: string) => { 
             console.log("MainScene: Received selfId from React:", id);
             this.selfId = id; 
@@ -75,7 +76,29 @@ export class MainScene extends Phaser.Scene {
         // Retrieve the callback passed via preBoot from GameCanvas
         this.onMoveCallback = this.game.registry.get('onMove');
 
-        console.log(`MainScene created — space: ${bgKey} (${worldW}×${worldH})`);
+        console.log(`MainScene created — initial space: ${initialBgKey}`);
+    }
+
+    private handleArenaMetadataUpdate(metadata: { backgroundUrl: string; width: number; height: number }) {
+        console.log("MainScene: Updating arena metadata", metadata);
+        
+        // Determine the texture key. metadata.backgroundUrl might be 'office', 'public', etc.
+        // We handle potential variations (like .png extension) to be safe.
+        let texKey = metadata.backgroundUrl.replace('.png', '').split('/').pop() || 'public';
+        if (!BACKGROUND_CONFIGS[texKey]) texKey = 'public';
+
+        // Update physics world bounds
+        this.physics.world.setBounds(0, 0, metadata.width, metadata.height);
+        
+        // Update background
+        const bg = this.children.getByName('background') as Phaser.GameObjects.Image;
+        if (bg) {
+            bg.setTexture(texKey);
+            bg.setDisplaySize(metadata.width, metadata.height);
+        }
+
+        // Update camera bounds
+        this.cameras.main.setBounds(0, 0, metadata.width, metadata.height);
     }
 
     private setupAnimations() {
@@ -173,14 +196,16 @@ export class MainScene extends Phaser.Scene {
         }
     }
 
-    private handleChatEvent(chat: { userId: string; message?: string; action?: string; isSystem?: boolean }) {
+    private handleChatEvent(chat: { id: string; message?: string; action?: string; isSystem?: boolean }) {
         if (!chat || !this.selfId) return;
+        
+        console.log(`[PHASER] Chat event received from ${chat.id}. Current selfId: ${this.selfId}`);
 
         let playerBubble = null;
-        if (chat.userId === this.selfId && this.player) {
+        if (chat.id === this.selfId && this.player) {
             playerBubble = this.player.chatBubble;
         } else {
-            const remote = this.remotePlayers.get(chat.userId);
+            const remote = this.remotePlayers.get(chat.id);
             if (remote) playerBubble = remote.chatBubble;
         }
 
@@ -190,15 +215,26 @@ export class MainScene extends Phaser.Scene {
             } else if (chat.action === 'stop-typing') {
                 playerBubble.setTyping(false);
             } else if (chat.message) {
-                console.log(`MainScene: Showing message from ${chat.userId}: ${chat.message}`);
+                console.log(`MainScene: Showing message from ${chat.id}: ${chat.message}`);
                 playerBubble.showMessage(chat.message, chat.isSystem || false);
             }
         }
     }
 
     update() {
+        // Automatically disable Phaser keyboard if user is typing in HTML
+        const isTyping = document.activeElement?.tagName === 'INPUT' || 
+                         document.activeElement?.tagName === 'TEXTAREA';
+        
+        if (this.input.keyboard) {
+            this.input.keyboard.enabled = !isTyping;
+        }
+
         if (this.player) {
             this.player.update();
+            
+            // If typing, we don't process movement network updates
+            if (isTyping) return;
             
             // Check grid crossing
             const CELL_SIZE = 20;
@@ -206,16 +242,19 @@ export class MainScene extends Phaser.Scene {
             const currentGridY = Math.round(this.player.y / CELL_SIZE);
             
             const speed = this.player.body?.velocity.length() || 0;
-            if (speed > 0 && this.onMoveCallback) {
-                // Determine next grid block based on direction
-                let nextX = currentGridX;
-                let nextY = currentGridY;
-                if (this.player.lastDirection === 'left') nextX -= 1;
-                else if (this.player.lastDirection === 'right') nextX += 1;
-                else if (this.player.lastDirection === 'up') nextY -= 1;
-                else if (this.player.lastDirection === 'down') nextY += 1;
+            if (speed > 0) {
+                const currentMove = this.game.registry.get('onMove');
+                if (currentMove) {
+                    // Determine next grid block based on direction
+                    let nextX = currentGridX;
+                    let nextY = currentGridY;
+                    if (this.player.lastDirection === 'left') nextX -= 1;
+                    else if (this.player.lastDirection === 'right') nextX += 1;
+                    else if (this.player.lastDirection === 'up') nextY -= 1;
+                    else if (this.player.lastDirection === 'down') nextY += 1;
 
-                this.onMoveCallback(nextX, nextY);
+                    currentMove(nextX, nextY, this.player.lastDirection || 'down');
+                }
             }
         }
 
