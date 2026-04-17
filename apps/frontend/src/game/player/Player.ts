@@ -4,7 +4,14 @@ import { ChatBubble } from '../components/ChatBubble';
 export class Player extends Phaser.Physics.Arcade.Sprite {
     public lastDirection: string = 'down';
     public textureKey: string;
-    private cursors: Phaser.Types.Input.Keyboard.CursorKeys | undefined;
+    private cursors:
+        | {
+              left: Phaser.Input.Keyboard.Key;
+              right: Phaser.Input.Keyboard.Key;
+              up: Phaser.Input.Keyboard.Key;
+              down: Phaser.Input.Keyboard.Key;
+          }
+        | undefined;
     private wasd: {
         W: Phaser.Input.Keyboard.Key;
         A: Phaser.Input.Keyboard.Key;
@@ -20,6 +27,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         scene.add.existing(this);
         scene.physics.add.existing(this);
 
+        this.setFrame(1);
         this.setCollideWorldBounds(true);
         
         // Reduce hitbox to feet area
@@ -34,11 +42,28 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         
         // Input setup
         if (scene.input.keyboard) {
-            this.cursors = scene.input.keyboard.createCursorKeys();
-            this.wasd = scene.input.keyboard.addKeys('W,A,S,D') as any;
+            this.cursors = scene.input.keyboard.addKeys({
+                left: Phaser.Input.Keyboard.KeyCodes.LEFT,
+                right: Phaser.Input.Keyboard.KeyCodes.RIGHT,
+                up: Phaser.Input.Keyboard.KeyCodes.UP,
+                down: Phaser.Input.Keyboard.KeyCodes.DOWN,
+            }, false) as {
+                left: Phaser.Input.Keyboard.Key;
+                right: Phaser.Input.Keyboard.Key;
+                up: Phaser.Input.Keyboard.Key;
+                down: Phaser.Input.Keyboard.Key;
+            };
+            this.wasd = scene.input.keyboard.addKeys('W,A,S,D', false) as any;
         }
 
         this.chatBubble = new ChatBubble(scene, x, y);
+    }
+
+    public setAvatar(textureKey: string) {
+        if (!textureKey || textureKey === this.textureKey) return;
+
+        this.textureKey = textureKey;
+        this.setTexture(textureKey);
     }
 
     update() {
@@ -79,7 +104,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             }
         }
 
-        this.chatBubble.updatePosition(this.x, this.y);
+        this.chatBubble.updatePosition(this.x, this.y, this.displayHeight);
     }
     
     destroy(fromScene?: boolean) {

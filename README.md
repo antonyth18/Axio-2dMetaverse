@@ -33,4 +33,5 @@ npm run dev
 
 - Frontend: [http://localhost:5173](http://localhost:5173)
 - Express Gateway: [http://localhost:3000](http://localhost:3000)
+- Socket.IO Realtime Server: [http://localhost:8081](http://localhost:8081)
 - Go Engine: [http://localhost:8080](http://localhost:8080)

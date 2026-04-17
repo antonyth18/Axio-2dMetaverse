@@ -17,16 +17,27 @@ export class RemotePlayer extends Phaser.GameObjects.Sprite {
         this.targetY = y;
 
         scene.add.existing(this);
-        this.setScale(0.25);
+        this.setFrame(1);
         this.setOrigin(0.5, 0.5);
         
         this.chatBubble = new ChatBubble(scene, x, y);
+    }
+
+    public setAvatar(textureKey: string) {
+        if (!textureKey || textureKey === this.textureKey) return;
+
+        this.textureKey = textureKey;
+        this.setTexture(textureKey);
     }
 
     public updateData(data: { x: number, y: number, direction: string, avatarId?: string }) {
         this.targetX = data.x;
         this.targetY = data.y;
         this.lastDirection = data.direction;
+
+        if (data.avatarId && data.avatarId !== this.textureKey) {
+            this.setAvatar(data.avatarId);
+        }
     }
 
     update() {
@@ -53,7 +64,7 @@ export class RemotePlayer extends Phaser.GameObjects.Sprite {
             }
         }
         
-        this.chatBubble.updatePosition(this.x, this.y);
+        this.chatBubble.updatePosition(this.x, this.y, this.displayHeight);
     }
     
     destroy(fromScene?: boolean) {

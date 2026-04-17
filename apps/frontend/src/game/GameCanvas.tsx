@@ -47,7 +47,10 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({ users, chatMessages, sel
                         game.registry.set('onMove', onMove);
                     },
                     postBoot: (game) => {
-                        setSceneReady(true);
+                        // We must wait for MainScene to finish create() so event listeners are ready
+                        game.events.once('scene-ready', () => {
+                            setSceneReady(true);
+                        });
                     }
                 }
             };
@@ -70,16 +73,25 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({ users, chatMessages, sel
         }
     }, [onMove]);
 
-    // Update Users
+    // Send selfId update separately so Phaser can always match it against users
     useEffect(() => {
-        if (sceneReady && gameRef.current) {
-            const scene = gameRef.current.scene.getScene('MainScene');
-            if (scene) {
-                scene.events.emit('setSelfId', selfId);
-                scene.events.emit('networkUsersUpdate', users);
-            }
+        if (!sceneReady || !gameRef.current || !selfId) return;
+        const scene = gameRef.current.scene.getScene('MainScene');
+        if (scene) {
+            scene.events.emit('setSelfId', selfId);
+            // Re-emit users immediately so Phaser can spawn the player with the now-known selfId
+            scene.events.emit('networkUsersUpdate', users);
         }
-    }, [users, sceneReady, selfId]);
+    }, [selfId, sceneReady]);
+
+    // Update Users whenever the player map changes
+    useEffect(() => {
+        if (!sceneReady || !gameRef.current) return;
+        const scene = gameRef.current.scene.getScene('MainScene');
+        if (scene) {
+            scene.events.emit('networkUsersUpdate', users);
+        }
+    }, [users, sceneReady]);
 
     // Update Room Metadata
     useEffect(() => {

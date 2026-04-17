@@ -46,7 +46,8 @@ router.post("/signup", async (req, res) => {
 
     res.json({ 
       userId: user.id,
-      token: token
+      token: token,
+      avatarId: user.avatarId
     });
   } catch (error) {
     console.log(error);
@@ -80,7 +81,8 @@ router.post("/signin", async (req, res)=>{
             expiresIn: "10h"
         })
         res.json({
-            token
+            token,
+            avatarId: user.avatarId
         })
     } catch (error) {
         res.status(400).json({message:"Internal Server Error"})
