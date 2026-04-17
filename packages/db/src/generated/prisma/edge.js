@@ -207,7 +207,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "/home/res/Downloads/WEB/PROJECT/metaverse/Axio-2dMetaverse/packages/db/src/generated/prisma",
+      "value": "/Users/antonythaikadavil/Desktop/projects/Axio-2dMetaverse/2d-metaverse/packages/db/src/generated/prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -216,7 +216,7 @@ const config = {
     "binaryTargets": [
       {
         "fromEnvVar": null,
-        "value": "debian-openssl-3.0.x",
+        "value": "darwin-arm64",
         "native": true
       },
       {
@@ -229,12 +229,11 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "/home/res/Downloads/WEB/PROJECT/metaverse/Axio-2dMetaverse/packages/db/prisma/schema.prisma",
+    "sourceFilePath": "/Users/antonythaikadavil/Desktop/projects/Axio-2dMetaverse/2d-metaverse/packages/db/prisma/schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
-    "rootEnvPath": null,
-    "schemaEnvPath": "../../../../../.env"
+    "rootEnvPath": null
   },
   "relativePath": "../../../prisma",
   "clientVersion": "6.8.2",
@@ -243,6 +242,7 @@ const config = {
     "db"
   ],
   "activeProvider": "postgresql",
+  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {

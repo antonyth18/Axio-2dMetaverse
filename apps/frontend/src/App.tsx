@@ -112,8 +112,6 @@ const GameView = () => {
         setShowSpacePicker(false);
         triggerCreateRoom({ backgroundUrl: spaceKey, width, height });
     };
-    const selfId = socketSelfId; 
-    const error = null;
 
     const createRoom = React.useCallback(() => {
         console.log("[APP] Triggering room creation...");
