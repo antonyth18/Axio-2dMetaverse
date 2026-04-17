@@ -9,6 +9,7 @@ import {
   ConnectionState,
 } from 'livekit-client';
 import { UserState } from '@/types';
+import { Mic, MicOff, Video, VideoOff, PhoneOff } from 'lucide-react';
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 const LIVEKIT_URL = import.meta.env.VITE_LIVEKIT_URL || 'ws://localhost:7880';
@@ -79,6 +80,8 @@ export const ProximityVideoOverlay: React.FC<Props> = ({
   const [isNearby,   setIsNearby]   = useState(false);
   const [isJoining,  setIsJoining]  = useState(false); // button loading state
   const [isConnected, setIsConnected] = useState(false);
+  const [isCameraOn,  setIsCameraOn]  = useState(true);
+  const [isMicOn,     setIsMicOn]     = useState(true);
   const [localTrack,  setLocalTrack]  = useState<LocalVideoTrack | null>(null);
   const [remoteStreams, setRemoteStreams] = useState<RemoteStream[]>([]);
 
@@ -185,16 +188,33 @@ export const ProximityVideoOverlay: React.FC<Props> = ({
       });
 
       room.on(RoomEvent.TrackSubscribed, (track: RemoteTrack, _pub, participant: RemoteParticipant) => {
-        if (track.kind !== Track.Kind.Video) return;
-        console.log(`[Proximity] Remote video connected from user: ${participant.identity}`);
-        setRemoteStreams(prev =>
-          prev.some(s => s.track === track) ? prev
-            : [...prev, { participantId: participant.identity, track }]
-        );
+        console.log(`[Proximity] Track subscribed! Type: ${track.kind}, from user: ${participant.identity}`);
+        
+        if (track.kind === Track.Kind.Audio) {
+          // Explicitly handle audio track: attach to DOM directly
+          const audioEl = track.attach();
+          audioEl.autoplay = true;
+          audioEl.id = `audio-${track.sid}`;
+          document.body.appendChild(audioEl);
+          console.log(`[Proximity] Audio element attached to DOM for ${participant.identity}`);
+          return;
+        }
+
+        if (track.kind === Track.Kind.Video) {
+          setRemoteStreams(prev =>
+            prev.some(s => s.track === track) ? prev
+              : [...prev, { participantId: participant.identity, track }]
+          );
+        }
       });
 
       room.on(RoomEvent.TrackUnsubscribed, (track: RemoteTrack) => {
-        setRemoteStreams(prev => prev.filter(s => s.track !== track));
+        console.log(`[Proximity] Track unsubscribed! Type: ${track.kind}`);
+        if (track.kind === Track.Kind.Video) {
+          setRemoteStreams(prev => prev.filter(s => s.track !== track));
+        } else if (track.kind === Track.Kind.Audio) {
+          track.detach().forEach(el => el.remove());
+        }
       });
 
       // ── Step 3: connect (signal + ICE) ───────────────────────────────────
@@ -207,17 +227,18 @@ export const ProximityVideoOverlay: React.FC<Props> = ({
         publishedRef.current = true;
         try {
           // High-level API: handles ICE negotiation + retry internally
-          const [camPub, _micPub] = await Promise.all([
-            room.localParticipant.setCameraEnabled(true),
-            room.localParticipant.setMicrophoneEnabled(true),
+          const [camPub, micPub] = await Promise.all([
+            room.localParticipant.setCameraEnabled(isCameraOn),
+            room.localParticipant.setMicrophoneEnabled(isMicOn),
           ]);
+          console.log(`[Proximity] Audio published successfully? ${!!micPub} / Camera published? ${!!camPub}`);
 
           // Grab local video track for the preview tile
           const videoTrack = camPub?.track as LocalVideoTrack | undefined;
           if (videoTrack) {
             setLocalTrack(videoTrack);
-            console.log('[Proximity] Local tracks published ✓');
           }
+          console.log(`[Proximity] Local tracks published (Cam: ${isCameraOn ? 'ON' : 'OFF'}, Mic: ${isMicOn ? 'ON' : 'OFF'}) ✓`);
         } catch (publishErr) {
           // Log but stay connected — we can still receive remote video
           console.warn('[Proximity] Could not publish local tracks (staying in room):', publishErr);
@@ -237,7 +258,40 @@ export const ProximityVideoOverlay: React.FC<Props> = ({
     }
   };
 
-  // ── 3. leaveRoom ─────────────────────────────────────────────────────────
+  // ── 3. Toggles and Leave ──────────────────────────────────────────────────
+  const toggleCamera = async () => {
+    if (!roomRef.current) {
+        setIsCameraOn(prev => !prev);
+        return;
+    }
+    const nextState = !isCameraOn;
+    console.log(`[Proximity] Toggling camera: ${nextState ? 'ON' : 'OFF'}`);
+    try {
+      await roomRef.current.localParticipant.setCameraEnabled(nextState);
+      setIsCameraOn(nextState);
+      // Grab track if enabled so we can render local preview
+      const pub = roomRef.current.localParticipant.getTrackPublication(Track.Source.Camera);
+      setLocalTrack(nextState && pub?.track ? (pub.track as LocalVideoTrack) : null);
+    } catch (err) {
+      console.error('[Proximity] Failed to toggle camera:', err);
+    }
+  };
+
+  const toggleMic = async () => {
+    if (!roomRef.current) {
+        setIsMicOn(prev => !prev);
+        return;
+    }
+    const nextState = !isMicOn;
+    console.log(`[Proximity] Toggling microphone: ${nextState ? 'ON' : 'OFF'}`);
+    try {
+      await roomRef.current.localParticipant.setMicrophoneEnabled(nextState);
+      setIsMicOn(nextState);
+    } catch (err) {
+      console.error('[Proximity] Failed to toggle microphone:', err);
+    }
+  };                                                            
+
   const leaveRoom = () => {
     if (leaveTimer.current) clearTimeout(leaveTimer.current);
     if (!roomRef.current) return;
@@ -314,25 +368,45 @@ export const ProximityVideoOverlay: React.FC<Props> = ({
           borderRadius:   '12px',
           backdropFilter: 'blur(6px)',
         }}>
-          {localTrack && <VideoTile track={localTrack} muted label="You" />}
+          {localTrack && isCameraOn && <VideoTile track={localTrack} muted label="You" />}
           {remoteStreams.map(({ participantId, track }) => (
             <VideoTile key={participantId} track={track} label={participantId} />
           ))}
+        </div>
+      )}
+
+      {/* Floating Control Bar at Bottom Center */}
+      {isConnected && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] flex items-center justify-center gap-4 bg-black/70 backdrop-blur-md px-6 py-3 rounded-full border border-white/10 shadow-2xl">
+          {/* Mic Toggle */}
+          <button
+            onClick={toggleMic}
+            className={`flex items-center justify-center w-12 h-12 rounded-full transition-all ${
+              isMicOn ? 'bg-gray-700 hover:bg-gray-600' : 'bg-red-500 hover:bg-red-600'
+            }`}
+            title={isMicOn ? "Mute Microphone" : "Unmute Microphone"}
+          >
+            {isMicOn ? <Mic className="w-5 h-5 text-white" /> : <MicOff className="w-5 h-5 text-white" />}
+          </button>
+          
+          {/* Camera Toggle */}
+          <button
+            onClick={toggleCamera}
+            className={`flex items-center justify-center w-12 h-12 rounded-full transition-all ${
+              isCameraOn ? 'bg-gray-700 hover:bg-gray-600' : 'bg-red-500 hover:bg-red-600'
+            }`}
+            title={isCameraOn ? "Turn off Camera" : "Turn on Camera"}
+          >
+            {isCameraOn ? <Video className="w-5 h-5 text-white" /> : <VideoOff className="w-5 h-5 text-white" />}
+          </button>
+
+          {/* Leave Call */}
           <button
             onClick={leaveRoom}
-            style={{
-              marginTop:    '4px',
-              background:   '#ef4444',
-              color:        '#fff',
-              border:       'none',
-              borderRadius: '8px',
-              padding:      '5px 10px',
-              fontSize:     '12px',
-              fontWeight:   700,
-              cursor:       'pointer',
-            }}
+            className="flex items-center justify-center w-12 h-12 rounded-full bg-red-600 hover:bg-red-700 transition-all ml-2"
+            title="Leave Call"
           >
-            ✕ Leave Call
+            <PhoneOff className="w-5 h-5 text-white" />
           </button>
         </div>
       )}
