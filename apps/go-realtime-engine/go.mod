@@ -1,5 +1,6 @@
 module github.com/antonyth18/metaverse-platform/go-realtime-engine
 
+go 1.22
 go 1.25.0
 
 require (

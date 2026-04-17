@@ -208,7 +208,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "/Users/antonythaikadavil/Desktop/projects/Axio-2dMetaverse/2d-metaverse/packages/db/src/generated/prisma",
+      "value": "/home/res/Downloads/WEB/PROJECT/metaverse/Axio-2dMetaverse/packages/db/src/generated/prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -217,16 +217,20 @@ const config = {
     "binaryTargets": [
       {
         "fromEnvVar": null,
-        "value": "darwin-arm64",
+        "value": "debian-openssl-3.0.x",
         "native": true
       },
       {
         "fromEnvVar": null,
         "value": "darwin-arm64"
+      },
+      {
+        "fromEnvVar": null,
+        "value": "debian-openssl-3.0.x"
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "/Users/antonythaikadavil/Desktop/projects/Axio-2dMetaverse/2d-metaverse/packages/db/prisma/schema.prisma",
+    "sourceFilePath": "/home/res/Downloads/WEB/PROJECT/metaverse/Axio-2dMetaverse/packages/db/prisma/schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
@@ -248,8 +252,8 @@ const config = {
       }
     }
   },
-  "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?\n// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n\ngenerator client {\n  provider      = \"prisma-client-js\"\n  output        = \"../src/generated/prisma\"\n  binaryTargets = [\"native\", \"darwin-arm64\"]\n}\n\n// generator client {\n//   provider      = \"prisma-client-js\"\n//  binaryTargets = [\"native\", \"linux-musl\"]\n// }\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel User {\n  id           String  @id @unique @default(cuid())\n  username     String  @unique\n  password     String\n  displayName  String  @default(\"\")\n  profileImage String  @default(\"\")\n  avatarId     String?\n  role         Role\n  spaces       Space[]\n  avatar       Avatar? @relation(fields: [avatarId], references: [id])\n}\n\nmodel Space {\n  id            String          @id @unique @default(cuid())\n  name          String\n  width         Int\n  height        Int?\n  thumbnail     String?\n  backgroundUrl String?\n  creatorId     String\n  creator       User            @relation(fields: [creatorId], references: [id])\n  elements      spaceElements[]\n}\n\nmodel spaceElements {\n  id         String  @id @unique @default(cuid())\n  elementId  String\n  spaceId    String\n  x          Int\n  y          Int\n  height     String  @default(\"\")\n  width      String  @default(\"\")\n  space      Space   @relation(fields: [spaceId], references: [id])\n  mapElement Element @relation(fields: [elementId], references: [id])\n}\n\nmodel Element {\n  id       String          @id @unique @default(cuid())\n  width    Int\n  height   Int\n  imageUrl String\n  static   Boolean\n  spaces   spaceElements[]\n  map      mapElements[]\n}\n\nmodel background {\n  id   String @id @unique @default(cuid())\n  Url  String\n  maps Map[]\n}\n\nmodel Map {\n  id           String        @id @unique @default(cuid())\n  width        Int\n  height       Int\n  name         String\n  thumbnail    String\n  backgroundId String?\n  background   background?   @relation(fields: [backgroundId], references: [id])\n  elements     mapElements[]\n}\n\nmodel mapElements {\n  id        String  @id @unique @default(cuid())\n  mapId     String\n  elementId String\n  height    String  @default(\"\")\n  width     String  @default(\"\")\n  x         Int?\n  y         Int?\n  map       Map     @relation(fields: [mapId], references: [id])\n  element   Element @relation(fields: [elementId], references: [id])\n}\n\nmodel Avatar {\n  id            String  @id @unique @default(cuid())\n  Idle_downUrl  String\n  Idle_leftUrl  String\n  Idle_rightUrl String\n  Idle_upUrl    String\n  Run_downUrl   String\n  Run_leftUrl   String\n  Run_rightUrl  String\n  Run_upUrl     String\n  name          String?\n  user          User[]\n}\n\nenum Role {\n  Admin\n  User\n}\n",
-  "inlineSchemaHash": "1883302ead84041dc46b25a6d08541591db45485173d109be74ba2df1fb72c9c",
+  "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?\n// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n\ngenerator client {\n  provider      = \"prisma-client-js\"\n  output        = \"../src/generated/prisma\"\n  binaryTargets = [\"native\", \"darwin-arm64\", \"debian-openssl-3.0.x\"]\n}\n\n// generator client {\n//   provider      = \"prisma-client-js\"\n//  binaryTargets = [\"native\", \"linux-musl\"]\n// }\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel User {\n  id           String  @id @unique @default(cuid())\n  username     String  @unique\n  password     String\n  displayName  String  @default(\"\")\n  profileImage String  @default(\"\")\n  avatarId     String?\n  role         Role\n  spaces       Space[]\n  avatar       Avatar? @relation(fields: [avatarId], references: [id])\n}\n\nmodel Space {\n  id            String          @id @unique @default(cuid())\n  name          String\n  width         Int\n  height        Int?\n  thumbnail     String?\n  backgroundUrl String?\n  creatorId     String\n  creator       User            @relation(fields: [creatorId], references: [id])\n  elements      spaceElements[]\n}\n\nmodel spaceElements {\n  id         String  @id @unique @default(cuid())\n  elementId  String\n  spaceId    String\n  x          Int\n  y          Int\n  height     String  @default(\"\")\n  width      String  @default(\"\")\n  space      Space   @relation(fields: [spaceId], references: [id])\n  mapElement Element @relation(fields: [elementId], references: [id])\n}\n\nmodel Element {\n  id       String          @id @unique @default(cuid())\n  width    Int\n  height   Int\n  imageUrl String\n  static   Boolean\n  spaces   spaceElements[]\n  map      mapElements[]\n}\n\nmodel background {\n  id   String @id @unique @default(cuid())\n  Url  String\n  maps Map[]\n}\n\nmodel Map {\n  id           String        @id @unique @default(cuid())\n  width        Int\n  height       Int\n  name         String\n  thumbnail    String\n  backgroundId String?\n  background   background?   @relation(fields: [backgroundId], references: [id])\n  elements     mapElements[]\n}\n\nmodel mapElements {\n  id        String  @id @unique @default(cuid())\n  mapId     String\n  elementId String\n  height    String  @default(\"\")\n  width     String  @default(\"\")\n  x         Int?\n  y         Int?\n  map       Map     @relation(fields: [mapId], references: [id])\n  element   Element @relation(fields: [elementId], references: [id])\n}\n\nmodel Avatar {\n  id            String  @id @unique @default(cuid())\n  Idle_downUrl  String\n  Idle_leftUrl  String\n  Idle_rightUrl String\n  Idle_upUrl    String\n  Run_downUrl   String\n  Run_leftUrl   String\n  Run_rightUrl  String\n  Run_upUrl     String\n  name          String?\n  user          User[]\n}\n\nenum Role {\n  Admin\n  User\n}\n",
+  "inlineSchemaHash": "e1337cd17bf3c8020b0c8e583845fe30f3836ab8e489e78e0a16e4c3bcbd4587",
   "copyEngine": true
 }
 
@@ -286,6 +290,10 @@ warnEnvConflicts({
 const PrismaClient = getPrismaClient(config)
 exports.PrismaClient = PrismaClient
 Object.assign(exports, Prisma)
+
+// file annotations for bundling tools to include these files
+path.join(__dirname, "libquery_engine-debian-openssl-3.0.x.so.node");
+path.join(process.cwd(), "packages/db/src/generated/prisma/libquery_engine-debian-openssl-3.0.x.so.node")
 
 // file annotations for bundling tools to include these files
 path.join(__dirname, "libquery_engine-darwin-arm64.dylib.node");

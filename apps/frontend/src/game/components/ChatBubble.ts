@@ -137,9 +137,10 @@ export class ChatBubble {
         });
     }
 
-    public updatePosition(x: number, y: number) {
-        // Position above the player's head
-        this.container.setPosition(x, y - 60); 
+    public updatePosition(x: number, y: number, spriteHeight: number = 64) {
+        // Keep the bubble close to the head even as avatar scale changes.
+        const verticalOffset = Math.max(32, spriteHeight * 0.5);
+        this.container.setPosition(x, y - verticalOffset);
     }
 
     public destroy() {

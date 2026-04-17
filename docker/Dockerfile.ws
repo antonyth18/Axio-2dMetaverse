@@ -21,7 +21,7 @@ RUN cd apps/ws && npm install
 COPY apps apps
 COPY packages packages
 
-EXPOSE 3000
+EXPOSE 8081
 
 # Run the HTTP app using the workspace-aware script
 CMD ["npm", "run", "--workspace=ws", "dev"]

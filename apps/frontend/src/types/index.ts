@@ -3,9 +3,11 @@ export type Direction = "up" | "down" | "left" | "right";
 
 export interface UserState {
   id: string;
+  userId?: string;
   x: number;
   y: number;
   direction: Direction;
+  avatarId?: string;
 }
 
 export interface AnimatedUserDisplayState {
