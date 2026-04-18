@@ -89,7 +89,7 @@ func main() {
 		port = "8082"
 	}
 
-	log.Printf("Go realtime engine listening on http://localhost:%s\n", port)
+	log.Printf("Go realtime engine listening on http://0.0.0.0:%s (accessible via LAN IP)\n", port)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatal(err)
 	}

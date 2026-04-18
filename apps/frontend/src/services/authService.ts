@@ -11,7 +11,6 @@ export const authService = {
     const res = await API.post("/signin", {
       username: email,
       password,
-      role: "admin",
     });
     return res.data;
   },

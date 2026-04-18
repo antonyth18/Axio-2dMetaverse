@@ -115,7 +115,7 @@ export const Login: React.FC = () => {
         className="w-full max-w-lg bg-white p-8 md:p-12 border-4 border-black rounded shadow-[8px_8px_0_0_#000000]"
       >
         <h2 className="text-4xl font-black text-center mb-2 text-black uppercase tracking-tight">
-          {isLogin ? "Welcome Back!" : "Join MetaVerse"}
+          {isLogin ? "Welcome Back!" : "Join AxioVerse"}
         </h2>
         <p className="text-center text-gray-600 font-medium mb-8">
           {isLogin
@@ -139,8 +139,8 @@ export const Login: React.FC = () => {
           <InputField
             id="email"
             type="text"
-            label="Username/Email"
-            placeholder="you@example.com"
+            label="Email"
+            placeholder="your cool username"
             value={email}
             onChange={setEmail}
             disabled={loading}

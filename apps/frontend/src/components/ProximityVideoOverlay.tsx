@@ -10,10 +10,11 @@ import {
 } from 'livekit-client';
 import { UserState } from '@/types';
 import { Mic, MicOff, Video, VideoOff, PhoneOff } from 'lucide-react';
+import { GO_API_URL, LIVEKIT_URL } from '../config/api';
 
 // ─── Config ──────────────────────────────────────────────────────────────────
-const LIVEKIT_URL = import.meta.env.VITE_LIVEKIT_URL || 'ws://localhost:7880';
-const TOKEN_BASE  = import.meta.env.VITE_GO_URL       || 'http://localhost:8082';
+const LIVEKIT_URL_VAL = LIVEKIT_URL;
+const TOKEN_BASE  = GO_API_URL;
 const THRESHOLD   = 5;    // grid units
 const LEAVE_DELAY = 1500; // ms out-of-range before auto-disconnect
 
@@ -187,6 +188,13 @@ export const ProximityVideoOverlay: React.FC<Props> = ({
         roomRef.current      = null;
       });
 
+      // Handle local track publication to update preview
+      room.on(RoomEvent.LocalTrackPublished, (pub) => {
+        if (pub.kind === Track.Kind.Video) {
+          setLocalTrack(pub.track as LocalVideoTrack);
+        }
+      });
+
       room.on(RoomEvent.TrackSubscribed, (track: RemoteTrack, _pub, participant: RemoteParticipant) => {
         console.log(`[Proximity] Track subscribed! Type: ${track.kind}, from user: ${participant.identity}`);
         
@@ -218,7 +226,7 @@ export const ProximityVideoOverlay: React.FC<Props> = ({
       });
 
       // ── Step 3: connect (signal + ICE) ───────────────────────────────────
-      await room.connect(LIVEKIT_URL, token);
+      await room.connect(LIVEKIT_URL_VAL, token);
       console.log('[Proximity] Signal connected, publishing media…');
 
       // ── Step 4: publish media — isolated try/catch so a publish failure
@@ -233,8 +241,9 @@ export const ProximityVideoOverlay: React.FC<Props> = ({
           ]);
           console.log(`[Proximity] Audio published successfully? ${!!micPub} / Camera published? ${!!camPub}`);
 
-          // Grab local video track for the preview tile
-          const videoTrack = camPub?.track as LocalVideoTrack | undefined;
+          // Grab local video track for the preview tile - Try publication first
+          const pub = room.localParticipant.getTrackPublication(Track.Source.Camera);
+          const videoTrack = (pub?.track || camPub?.track) as LocalVideoTrack | undefined;
           if (videoTrack) {
             setLocalTrack(videoTrack);
           }
@@ -269,9 +278,12 @@ export const ProximityVideoOverlay: React.FC<Props> = ({
     try {
       await roomRef.current.localParticipant.setCameraEnabled(nextState);
       setIsCameraOn(nextState);
-      // Grab track if enabled so we can render local preview
-      const pub = roomRef.current.localParticipant.getTrackPublication(Track.Source.Camera);
-      setLocalTrack(nextState && pub?.track ? (pub.track as LocalVideoTrack) : null);
+      
+      // Give it a tiny moment to ensure the track is attached to the pub
+      setTimeout(() => {
+        const pub = roomRef.current?.localParticipant.getTrackPublication(Track.Source.Camera);
+        setLocalTrack(nextState && pub?.track ? (pub.track as LocalVideoTrack) : null);
+      }, 100);
     } catch (err) {
       console.error('[Proximity] Failed to toggle camera:', err);
     }

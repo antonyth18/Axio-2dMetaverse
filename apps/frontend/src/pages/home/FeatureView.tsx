@@ -24,7 +24,7 @@ export const FeaturesView = () => {
     <section className="py-20 md:py-28 bg-gray-50 border-t-4 border-black">
       <div className="container mx-auto px-4 md:px-6 max-w-6xl">
         <h2 className="text-4xl md:text-5xl font-black text-center mb-4 text-black uppercase tracking-tight">
-          Why MetaVerse?
+          Why AxioVerse?
         </h2>
         <p className="text-xl text-gray-700 text-center mb-16 max-w-2xl mx-auto font-medium">
           Experience a new dimension of gaming with features designed for true immersion.

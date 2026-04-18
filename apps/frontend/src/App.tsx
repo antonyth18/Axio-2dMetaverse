@@ -28,6 +28,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 import { useSocket } from './hooks/useSocket';
 import { ProximityVideoOverlay } from './components/ProximityVideoOverlay';
 import { useState } from 'react';
+import { WS_URL } from './config/api';
 
 const SPACE_OPTIONS = [
     {
@@ -93,7 +94,7 @@ const GameView = () => {
         createRoom: triggerCreateRoom,
         selfId: socketSelfId,
     } = useSocket({
-        url: import.meta.env.VITE_WS_URL || 'http://localhost:8081',
+        url: WS_URL,
         token: token || "",
         roomCode: effectiveRoomCode,
         joinMetadata,
@@ -190,7 +191,7 @@ const GameView = () => {
             )}
 
             <header className="mb-4 text-center">
-                <h1 className="text-3xl font-black mb-1 text-black uppercase">MetaVerse Arena</h1>
+                <h1 className="text-3xl font-black mb-1 text-black uppercase">AxioVerse Arena</h1>
                 <p className="mb-2 font-medium uppercase tracking-wider text-xs">
                     {error ? (
                         <span className="text-red-500 font-bold">Error: {error}</span>

@@ -8,7 +8,7 @@ export const Navbar = () => {
     <nav className="w-full bg-white border-b-2 border-black flex items-center justify-between px-6 py-4 fixed top-0 z-50">
       <div className="flex items-center">
         <Link to="/" className="text-2xl font-black text-black tracking-tight">
-          MetaVerse
+          AxioVerse
         </Link>
       </div>
       <div className="flex items-center gap-4">

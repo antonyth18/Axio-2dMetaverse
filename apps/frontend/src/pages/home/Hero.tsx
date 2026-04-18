@@ -25,7 +25,7 @@ export const Hero = () => {
                 onClick={() => navigate('/login')}
                 className="bg-lime-500 hover:bg-lime-400 text-black font-extrabold px-10 py-5 rounded shadow-[6px_6px_0_0_#000000] border-4 border-black uppercase text-lg transition-all active:translate-y-1 active:translate-x-1 active:shadow-[2px_2px_0_0_#000000]"
               >
-                Join the Metaverse
+                Join the AxioVerse
               </button>
             </div>
           </div>

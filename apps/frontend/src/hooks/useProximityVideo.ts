@@ -10,8 +10,10 @@ import {
 } from 'livekit-client';
 import { UserState } from '@/types';
 
-const LIVEKIT_URL = import.meta.env.VITE_LIVEKIT_URL || 'ws://localhost:7880';
-const TOKEN_BASE_URL = import.meta.env.VITE_GO_URL || 'http://localhost:8082';
+import { GO_API_URL, LIVEKIT_URL } from '../config/api';
+
+const LIVEKIT_URL_VAL = LIVEKIT_URL;
+const TOKEN_BASE_URL = GO_API_URL;
 const PROXIMITY_THRESHOLD = 5; // grid units (~100 px at CELL_SIZE=20)
 
 // --- Pure helpers ---
@@ -137,7 +139,7 @@ export function useProximityVideo({
             track.detach();
           });
 
-          await room.connect(LIVEKIT_URL, token);
+          await room.connect(LIVEKIT_URL_VAL, token);
 
           // Publish local media only once per connection
           if (!publishedRef.current) {

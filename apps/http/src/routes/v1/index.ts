@@ -20,7 +20,7 @@ const imagekit = new ImageKit({
 
 router.post("/signup", async (req, res) => {
   const parsedData = SignupSchema.safeParse(req.body);
-  console.log(req.body);
+  console.log(`[AUTH] Signup attempt for username: "${req.body.username}" with role: ${req.body.role}`);
   if (!parsedData.success) {
     return res.status(400).json({ message: "Validation Failed" });
   }
@@ -58,17 +58,24 @@ router.post("/signup", async (req, res) => {
 router.post("/signin", async (req, res)=>{
     const parsedData = SigninSchema.safeParse(req.body)
     if(!parsedData.success){
+        console.warn("[AUTH] Signin validation failed:", parsedData.error.format());
         return res.status(400).json({message:"Validation Failed"})
     }
+    console.log(`[AUTH] Signin attempt for username: "${parsedData.data.username}"`);
     try {
-       const user = await dbClient.user.findUnique({
+       const user = await dbClient.user.findFirst({
             where:{
-                username: parsedData.data.username
+                username: {
+                    equals: parsedData.data.username,
+                    mode: 'insensitive'
+                }
             }
         })
         if(!user){
+            console.warn(`[AUTH] User Not Found in database: "${parsedData.data.username}"`);
             return res.status(403).json({message:"User Not Found"})
         }
+        console.log(`[AUTH] User found: ${user.id}. Comparing passwords...`);
         const isValid = await bcrypt.compare(parsedData.data.password, user.password)
         if(!isValid){
             return res.status(400).json({message:"Invalid Password"})
